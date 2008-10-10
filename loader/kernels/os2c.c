@@ -11,6 +11,8 @@
 #pragma aux linux_data_tmp_addr  "*"
 #pragma aux linux_text_len       "*"
 #pragma aux errnum               "*"
+#pragma aux boot_drive           "*"
+#pragma aux start_realmode_part  "*"
 
 #include <lip.h>
 
@@ -21,6 +23,10 @@ lip2_t *l;
 struct term_entry *t;
 // lip present flag
 char lip = 0;
+unsigned long boot_drive;
+
+
+void start_realmode_part (void);
 
 void init(void)
 {
@@ -94,4 +100,5 @@ void cmain(void)
   //
   // place for additional code
   //
+  start_realmode_part();
 }

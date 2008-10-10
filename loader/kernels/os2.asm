@@ -13,6 +13,7 @@ include mb_info.inc
 include mb_header.inc
 include mb_etc.inc
 
+;extrn realmode_init   :near
 extrn call_rm         :near
 extrn cmain           :near
 extrn exe_end         :near
@@ -21,9 +22,11 @@ extrn gdtsrc          :byte
 extrn gdtdesc         :fword
 extrn l               :dword
 extrn m               :dword
+extrn boot_drive      :dword
 
 public stop
 public base
+public start_realmode_part
 
 _16BIT_SIZE equ 40960                                                ; 16-bit part size
 
@@ -76,8 +79,9 @@ start:
 
                    ; emulate 32-bit call instruction
                    ; to 32-bit entry point
-                   db   0e8h
-                   dd   offset _TEXT:entry - 5
+                   ;db   0e8h
+                   ;dd   offset _TEXT:entry - 5
+                   jmp     real_start
 
                    org     start + 10h
 
@@ -90,8 +94,8 @@ base               dd      REAL_BASE
                    ;
 
 hard_stop:
-        cli
-        hlt
+                   cli
+                   hlt
 
 stop_flop:
                    xor     dl, dl
@@ -124,16 +128,36 @@ _mbhdr          multiboot_header  <_magic,_flags,_checksum,__mbhdr,__start,__exe
 
                    org     start + 100h
 real_start:
+                   ; Start loader
+                   mov     dl, bl
+                   jmp     real_start + 100h                         ; go to microfsd emulator
+
+gateA20_rm:
+                   mov     ax, 2400h
+                   test    dx, dx
+                   jz      ft1
+                   inc     ax
+ft1:               stc
+                   int     15h
+                   jnc     ft2
+
+                   ; set non-zero if failed
+                   mov     ah, 1
+
+                   ; save the status
+ft2:               mov     dl, ah
+
+                   retf
                    ;
                    ;  Place for realmode part
                    ;
-
 _TEXT16  ends
 
-
 _TEXT    segment dword public 'CODE'  use32
+                   ; beginning of the executable
                    org     BASE1
 entry0:
+                   ; start of 32-bit part
                    org     BASE1 + _16BIT_SIZE + 100h
                    ;
                    ; 32-bit entry point. Invokes by multiboot
@@ -183,6 +207,116 @@ loop1:
                    hlt                                               ; hang machine
                    jmp     $                                         ;
 
+start_realmode_part:
+                   xor     eax, eax
+                   push    eax
+                   call    gateA20
+                   add     eax, 4
+
+                   mov     ebx, boot_drive
+                   mov     eax, REAL_BASE
+                   shl     eax, 12
+                   mov     ax, offset _TEXT16:real_start
+                   push    eax
+                   call    call_rm
+                   add     esp, 4
+
+                   ;ret
+
+                   ; we should not return here
+                   cli
+                   hlt
+                   jmp     $
+
+; gateA20(int linear)
+;
+; Gate address-line 20 for high memory.
+;
+; This routine is probably overconservative in what it does, but so what?
+;
+; It also eats any keystrokes in the keyboard buffer.  :-(
+;
+
+K_RDWR          equ     0x60    ; keyboard data & cmds (read/write)
+K_STATUS        equ     0x64    ; keyboard status
+K_CMD           equ     0x64    ; keybd ctlr command (write-only)
+
+K_OBUF_FUL      equ     0x01    ; output buffer full
+K_IBUF_FUL      equ     0x02    ; input buffer full
+
+KC_CMD_WIN      equ     0xd0    ; read  output port
+KC_CMD_WOUT     equ     0xd1    ; write output port
+KB_OUTPUT_MASK  equ     0xdd    ; enable output buffer full interrupt
+                                ;   enable data line
+                                ;   enable clock line
+KB_A20_ENABLE   equ     0x02
+
+gateA20:
+                   ; first, try a BIOS call
+                   push    ebp
+                   mov     edx, [esp + 8]
+
+                   mov     eax, REAL_BASE
+                   shl     eax, 12
+                   mov     ax,  offset _TEXT16:gateA20_rm
+                   push    eax
+                   call    call_rm
+                   add     esp, 4
+
+                   pop     ebp
+                   test    dl, dl
+                   jnz     ft3
+
+                   ret
+
+ft3:               ; use keyboard controller
+                   push    eax
+
+                   call    gloop1
+
+                   mov     al, KC_CMD_WOUT
+                   out     K_CMD, al
+
+gloopint1:
+                   in      al, K_STATUS
+                   and     al, K_IBUF_FUL
+                   jnz     gloopint1
+
+                   mov     al, KB_OUTPUT_MASK
+                   cmp     byte ptr [esp + 8], 0
+                   jz      gdoit
+
+                   or      al, KB_A20_ENABLE
+gdoit:
+                   out     K_RDWR, al
+
+                   call    gloop1
+
+                   ; output a dummy command (USB keyboard hack)
+                   mov     al, 0ffh
+                   out     K_CMD, al
+                   call    gloop1
+
+                   pop     eax
+
+                   ret
+
+gloop1:
+                   in      al, K_STATUS
+                   and     al, K_IBUF_FUL
+                   jnz     gloop1
+
+gloop2:
+                   in      al, K_STATUS
+                   and     al, K_OBUF_FUL
+                   jz      gloop2ret
+                   in      al, K_RDWR
+                   jmp     gloop2
+
+gloop2ret:
+                   ret
+
+
 set_gdt:
                    ; set 16-bit segment (_TEXT16) base
                    ; in GDT for protected mode
@@ -212,6 +346,7 @@ set_gdt:
                    ; we should not return here
                    cli
                    hlt
+                   jmp     $
 
                    ;
                    ;  stop_floppy()
