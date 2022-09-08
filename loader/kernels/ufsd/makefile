@@ -74,11 +74,11 @@ defs=-dNO_PROT -dREAL_BASE=$(base) -dSHIFT=0
 .c:     $(MYDIR)netboot
 .asm:   $(MYDIR)netboot
 
-$(PATH)asmcode.$(O): $(MYDIR)..$(SEP)..$(SEP)preldr$(SEP)asmcode.asm
+$(PATH)asmcode.$(O):: $(MYDIR)..$(SEP)..$(SEP)preldr$(SEP)asmcode.asm
  @$(SAY) ASM      $^. $(LOG)
  $(verbose)$(ASM) -dSTAGE1_5 -dSHIFT=0 $(ASMOPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
-$(PATH)asmcode.$(SO): $(MYDIR)..$(SEP)..$(SEP)preldr$(SEP)asmcode.asm
+$(PATH)asmcode.$(SO):: $(MYDIR)..$(SEP)..$(SEP)preldr$(SEP)asmcode.asm
  @$(SAY) ASM      $^. $(LOG)
  $(verbose)$(ASM) -dSTAGE1_5 -dSHIFT=$(SHIFT) $(ASMOPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 

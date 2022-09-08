@@ -72,27 +72,27 @@ defs=-d$(basename) -dSHIFT=0
 
 $(MYDIR)fsys_ntfs_nocomp.c: .symbolic
 
-$(PATH)start.$(O): $(MYDIR)start.asm
+$(PATH)start.$(O):: $(MYDIR)start.asm
  @$(SAY) ASM      $^. $(LOG)
  $(verbose)$(ASM) -d$(basename) -dSHIFT=0 $(ASMOPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
-$(PATH)start.$(SO): $(MYDIR)start.asm
+$(PATH)start.$(SO):: $(MYDIR)start.asm
  @$(SAY) ASM      $^. $(LOG)
  $(verbose)$(ASM) -d$(basename) -dSHIFT=$(SHIFT) $(ASMOPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
-$(PATH)fsys.$(O): $(MYDIR)fsys.c
+$(PATH)fsys.$(O):: $(MYDIR)fsys.c
  @$(SAY) CC       $^. $(LOG)
  $(verbose)$(CC) -dSHIFT=0 -dSTAGE1_5 $(COPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
-$(PATH)fsys.$(SO): $(MYDIR)fsys.c
+$(PATH)fsys.$(SO):: $(MYDIR)fsys.c
  @$(SAY) CC       $^. $(LOG)
  $(verbose)$(CC) -dSHIFT=$(SHIFT) -dSTAGE1_5 $(COPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
-$(PATH)fsys_ntfs_nocomp.$(O): $(MYDIR)fsys_ntfs1.c
+$(PATH)fsys_ntfs_nocomp.$(O):: $(MYDIR)fsys_ntfs1.c
  @$(SAY) CC       $^. $(LOG)
  $(verbose)$(CC) -dfsys_ntfs -dSHIFT=0 -dSTAGE1_5 -dNO_NON_RESIDENT_ATTRIBUTE_LIST -dNO_ALTERNATE_DATASTREAM -dNO_ATTRIBUTE_LIST $(COPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
-$(PATH)fsys_ntfs_nocomp.$(SO): $(MYDIR)fsys_ntfs1.c
+$(PATH)fsys_ntfs_nocomp.$(SO):: $(MYDIR)fsys_ntfs1.c
  @$(SAY) CC       $^. $(LOG)
  $(verbose)$(CC) -dfsys_ntfs -dSHIFT=$(SHIFT) -dSTAGE1_5 -dNO_NON_RESIDENT_ATTRIBUTE_LIST -dNO_ALTERNATE_DATASTREAM -dNO_ATTRIBUTE_LIST $(COPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
