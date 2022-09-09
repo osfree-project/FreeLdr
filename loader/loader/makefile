@@ -62,11 +62,11 @@ F =
 
 .c:   $(MYDIR)..
 
-$(PATH)..$(SEP)cfgparse-l.$(O):: $(MYDIR)..$(SEP)cfgparse.c
+$(PATH)..$(SEP)cfgparse-l.$(O): $(MYDIR)..$(SEP)cfgparse.c
  @$(SAY) CC       $^. $(LOG)
  $(verbose)$(CC) -dLOADER $(COPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
-$(PATH)..$(SEP)cfgparse-l.$(SO):: $(MYDIR)..$(SEP)cfgparse.c
+$(PATH)..$(SEP)cfgparse-l.$(SO): $(MYDIR)..$(SEP)cfgparse.c
  @$(SAY) CC       $^. $(LOG)
  $(verbose)$(CC) -dLOADER $(COPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
