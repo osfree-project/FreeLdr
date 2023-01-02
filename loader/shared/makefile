@@ -15,7 +15,7 @@ TARGETS      = $(PATH)$(TRGT) # library $(library)
 ADD_COPT     = -s $(DEFINES) -i=$(ROOT)$(SEP)include -i=$(ROOT)$(SEP)include$(SEP)uFSD -i=$(MYDIR)include -i=$(MYDIR)..$(SEP)include -i=. -i=..
 ADD_ASMOPT   = -3 -s -mf $(DEFINES) -i=$(ROOT)$(SEP)include -i=$(ROOT)$(SEP)include$(SEP)uFSD -i=$(MYDIR)include -i=$(MYDIR)..$(SEP)include -i=. -i=..
 
-!include $(%ROOT)/mk/libs.mk
+!include $(%ROOT)tools/mk/libs.mk
 
 $(PATH)$(TRGT): $(OBJS)
  @$(MAKE) $(MAKEOPT) library=$(PATH)$(PROJ).lib library

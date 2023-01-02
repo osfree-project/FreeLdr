@@ -132,7 +132,7 @@ EXPORTS     = &
 
 DEST        = none
 
-!include $(%ROOT)/mk/appsos2v1.mk
+!include $(%ROOT)tools/mk/appsos2v1.mk
 
 .c: $(MYDIR)..
 .c: $(MYDIR)..$(SEP)..

@@ -9,7 +9,7 @@ DEST         = boot$(SEP)loader
 INSTALL_ADD  = 1
 INSTALL = boot.cfg preldr.ini
 
-!include $(%ROOT)/mk/all.mk
+!include $(%ROOT)tools/mk/all.mk
 
 $(DEST)$(SEP)boot.cfg: $(PATH)boot.cfg
 

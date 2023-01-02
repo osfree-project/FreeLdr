@@ -44,7 +44,7 @@ p            =
 e            = .mdl
 INSTALL      = $+$(blackboxes)$- $(rels1)
 
-!include $(%ROOT)/mk/loader.mk
+!include $(%ROOT)tools/mk/loader.mk
 
 # note that PATH is changed in loader.mk,
 # so it must be included before this place:

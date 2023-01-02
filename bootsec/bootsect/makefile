@@ -5,7 +5,7 @@
 
 DIRS = bs1 bs2 bs3
 
-!include $(%ROOT)/mk/all.mk
+!include $(%ROOT)tools/mk/all.mk
 
 # this implies do $(MAKE) $(MAKEOPT) TARGET=all subdirs
 #TARGETS      = subdirs

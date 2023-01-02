@@ -38,7 +38,7 @@ OBJS                    = $(zip_OBJS) $(common_OBJS)
 
 MOD_BASE         = REL1_BASE
 
-!include $(%ROOT)/mk/loader.mk
+!include $(%ROOT)tools/mk/loader.mk
 
 DEST             = none
 

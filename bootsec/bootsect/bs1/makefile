@@ -28,7 +28,7 @@ ALL        = $(p)$(PROJ0)$(e)
 
 srcfiles   = $(STARTUP) $(ALL)
 
-!include $(%ROOT)/mk/bootsec.mk
+!include $(%ROOT)tools/mk/bootsec.mk
 
 .asm: $(MYDIR)..
 

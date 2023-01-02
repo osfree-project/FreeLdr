@@ -11,7 +11,7 @@
 
 DEST             =  boot$(SEP)loader
 
-!include $(%ROOT)/mk/dirs.mk
+!include $(%ROOT)tools/mk/dirs.mk
 
 STAGE0_OBJS   =    $(p)segord$(e) $(p)init$(e) $(p)modesw$(e) $(p)asmcode$(e) $(p)biosdisk$(e) &
                    $(p)common$(e) $(p)stage0_fs$(e) $(p)func$(e) $(p)dskaccess$(e) $(p)part$(e) &
@@ -38,7 +38,7 @@ p            =
 e            = .mdl
 INSTALL      = $+$(ldrfiles)$-
 
-!include $(%ROOT)/mk/loader.mk
+!include $(%ROOT)tools/mk/loader.mk
 
 # note that PATH is changed in loader.mk,
 # so it must be included before this place:

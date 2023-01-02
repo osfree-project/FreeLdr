@@ -6,7 +6,7 @@
 
 DIRS = bootsect mbr fatboot eltorito exfat
 
-!include $(%ROOT)/mk/all.mk
+!include $(%ROOT)tools/mk/all.mk
 
 # this implies do $(MAKE) $(MAKEOPT) TARGET=all subdirs
 #TARGETS      = subdirs
