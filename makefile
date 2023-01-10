@@ -4,7 +4,7 @@
 # valerius, 2006/10/30
 #
 
-DIRS         = bootsec loader
+DIRS         = bootsec loader freeinst
 
 !include $(%ROOT)tools/mk/loader.mk
 
