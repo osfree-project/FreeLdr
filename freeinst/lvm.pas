@@ -38,6 +38,9 @@ under Win32/Linux/DOS it emulates required functions.}
 
 interface
 
+uses
+  Windows, SysUtils;
+  
 const
   LVM_ENGINE_NO_ERROR                          = 0;
   LVM_ENGINE_OUT_OF_MEMORY                     = 1;
@@ -106,7 +109,30 @@ implementation
 {$ifdef OS2}
 {$else}
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
+var
+  hdl: HANDLE;
+  s: AnsiString;
+  Drive: Integer;
 begin
+  for Drive:=0 to 15 do
+  begin
+    // create a handle to the device
+    s := '\\.\PhysicalDrive' + IntToStr(Drive);
+    hdl:=CreateFileA(PChar(s),
+                    GENERIC_READ or GENERIC_WRITE,
+                    FILE_SHARE_READ or FILE_SHARE_WRITE,
+                    nil,
+                    OPEN_EXISTING,
+                    0,
+                    0);
+
+  // @todo fill drive information array
+    if hdl <> INVALID_HANDLE_VALUE then
+    begin
+      CloseHandle(hdl); // @todo move to LvmCloseEngine
+    end;
+  end;
+
   result:=LVM_ENGINE_NO_ERROR;
 end;
 

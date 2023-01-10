@@ -937,6 +937,16 @@ Begin
   TextColor(Cyan);
   ClrScr;
 end;
+
+var
+  OldExitProc: Pointer;
+
+procedure MyExitProc;
+begin
+  LvmCloseEngine();
+  ExitProc:=OldExitProc; { reset the old exitproc }
+end;
+
 { ***********************************************************************************************************
   ********************************************       MAIN      **********************************************
   *********************************************************************************************************** }
@@ -970,7 +980,6 @@ var
   YN: Menu;
   SelectKey: Char;
   MK: MenuKey;
-
 Begin
 {$IFDEF WIN32}
   InitWindows;
@@ -989,6 +998,11 @@ DriveT := GetDriveType(drive1[1]);
 }
   InitDesktop;
   ShowWarning;
+  LvmOpenEngine(False);
+
+  OldExitProc   := ExitProc;
+  ExitProc      := @MyExitProc;
+
   DriveInfo;              // Ask user which drive to install to.
 
   Repeat

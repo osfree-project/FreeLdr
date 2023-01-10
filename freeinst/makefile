@@ -22,5 +22,5 @@ defs = -dLINUX
 !endif
 ADD_PCOPT =  -B -Fccp437 $(defs)
 DESC  = FreeLDR installer by Yoda
-DEST  = boot$(SEP)freeinst
+DEST  = boot
 !include $(%ROOT)tools/mk/toolspas.mk
