@@ -64,7 +64,8 @@ Uses
               Impl_LNX,
 {$ENDIF}
               Strings, SysUtils, Crt, Dos,
-              tpcrt, tpwindow, colordef, tpmenu;
+              tpcrt, tpwindow, colordef, tpmenu, // Turbo Professional
+			  lvm; // OS/2 Logical Volume Manager
 
 
 {$IFDEF FPC}
