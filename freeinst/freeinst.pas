@@ -895,7 +895,7 @@ const
     WhiteOnRed,              {BodyColor}
     RedOnLtGray,             {SelectColor}
     $1E,                     {HiliteColor}
-    $0E,                     {HelpColor}
+    BlackOnLtGray,           {HelpColor}
     $17,                     {DisabledColor}
     $03                      {ShadowColor}
     );
@@ -948,7 +948,7 @@ const
     $08+CyanOnBlue,          {BodyColor}
     BlackOnCyan,             {SelectColor}
     $1E,                     {HiliteColor}
-    $0E,                     {HelpColor}
+    BlackOnLtGray,           {HelpColor}
     $17,                     {DisabledColor}
     $03                      {ShadowColor}
     );
@@ -990,57 +990,55 @@ DriveT := GetDriveType(drive1[1]);
   ShowWarning;
   DriveInfo;              // Ask user which drive to install to.
 
-
-Repeat
-  
-  ClrScr;
-Writeln;
-Writeln('                   Partition ',drive1,' is selected for install');
-Writeln;
-  YN:=NewMenu([], nil);
-  SubMenu(10, 1, 0, Vertical, BoldFrameChars, Colors, '');
-  MenuItem(' 1:  Install new MBR for FreeLDR ', 1, 1, Ord(MInstallMBR), '');
-  MenuItem(' 2:  Install FreeLDR on a partition ', 2, 2, Ord(MInstallFreeLdr), '');
-  MenuItem(' 3:  Backup MBR sector ', 3, 2, Ord(MBackupMBR), '');
-  MenuItem(' 4:  Backup a BootBlock ', 4, 2, Ord(MBackUpBootBlock), '');
-  MenuItem(' 5:  Restore MBR sector from backup file ', 5, 2, Ord(MRestoreMBR), '');
-  MenuItem(' 6:  Restore a BootBlock from backup file ', 6, 2, Ord(MRestoreBootBlock), '');
-  MenuItem(' 9:  Change partition to install, backup or restore to ', 7, 2, Ord(MChangePartition), '');
-  MenuItem(' 0:  Exit ', 8, 2, Ord(MExit), '');
-  ResetMenu(YN);
-  MK:=MenuChoice(YN, SelectKey);
-  ClrScr;
-  
-  case MK of
-    Ord(MInstallMBR): Install_MBR;
-    Ord(MInstallFreeLdr): Begin
-         Case DriveT Of
-           dtFloppy    : Install_Fat;
-           dtHDFAT     : Install_Fat;
-           dtHDFAT32   : Install_Fat32;
-           dtHDHPFS    : Install_HPFS;
-           dtHDJFS     : Install_JFS;
-//           dtHDNTFS  : Install_;  No Writeble IFS exists for OS/2
-//           dtHDExt2  : Install_;  Wonder if it will work on OS/2 ???
-           Else Begin
-                Writeln('We do not yet support support the filesystem on your ',drive1,' partition');
-                Writeln('Press <Enter> to continue');
-                Readln;
-                End;
+  Repeat
+    ClrScr;
+    Writeln;
+    Writeln('                   Partition ',drive1,' is selected for install');
+    Writeln;
+    YN:=NewMenu([], nil);
+    SubMenu(10, 1, 25, Vertical, BoldFrameChars, Colors, '');
+    MenuItem(' 1: Install new MBR for FreeLDR', 1, 1, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
+    MenuItem(' 2: Install FreeLDR on a partition', 2, 2, Ord(MInstallFreeLdr), 'Install FreeLDR on selected partition');
+    MenuItem(' 3: Backup MBR sector', 3, 2, Ord(MBackupMBR), 'Make back up copy of Master Boot Record from selected drive');
+    MenuItem(' 4: Backup a BootBlock', 4, 2, Ord(MBackUpBootBlock), 'Make back up copy of Master Boot Record from selected partition');
+    MenuItem(' 5: Restore MBR sector from backup file', 5, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
+    MenuItem(' 6: Restore a BootBlock from backup file', 6, 2, Ord(MRestoreBootBlock), 'Restore a BootBlock from backup file');
+    MenuItem(' 9: Change partition to install, backup or restore to', 7, 2, Ord(MChangePartition), 'Change partition to install, backup or restore to');
+    MenuItem(' 0: Exit', 8, 2, Ord(MExit), 'Exit FreeLDR installer');
+    ResetMenu(YN);
+    MK:=MenuChoice(YN, SelectKey);
+    ClrScr;
+    
+    case MK of
+      Ord(MInstallMBR): Install_MBR;
+      Ord(MInstallFreeLdr): Begin
+           Case DriveT Of
+             dtFloppy    : Install_Fat;
+             dtHDFAT     : Install_Fat;
+             dtHDFAT32   : Install_Fat32;
+             dtHDHPFS    : Install_HPFS;
+             dtHDJFS     : Install_JFS;
+  //           dtHDNTFS  : Install_;  No Writeble IFS exists for OS/2
+  //           dtHDExt2  : Install_;  Wonder if it will work on OS/2 ???
+             Else Begin
+                  Writeln('We do not yet support support the filesystem on your ',drive1,' partition');
+                  Writeln('Press <Enter> to continue');
+                  Readln;
+                  End;
+             End;
            End;
-         End;
-
-    Ord(MBackUpMBR): Backup_MBR_sector;
-    Ord(MBackUpBootBlock): BackUp_BootBlock;
-    Ord(MRestoreMBR): Restore_MBR_Sector;
-    Ord(MRestoreBootBlock): Restore_Bootblock;
-    Ord(MChangePArtition): Begin
-         DriveInfo;
-         End;
-    Ord(Mexit): break;
-  end;
-  Delay(100);
-until false;
+  
+      Ord(MBackUpMBR): Backup_MBR_sector;
+      Ord(MBackUpBootBlock): BackUp_BootBlock;
+      Ord(MRestoreMBR): Restore_MBR_Sector;
+      Ord(MRestoreBootBlock): Restore_Bootblock;
+      Ord(MChangePArtition): Begin
+           DriveInfo;
+           End;
+      Ord(Mexit): break;
+    end;
+    Delay(100);
+  until false;
 
 End.
 

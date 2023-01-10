@@ -227,8 +227,13 @@ begin
     Key:=KeyP;
     GetMem(Name, Length(NameStr)+1);
     Move(NameStr, Name^, Length(NameStr)+1);
-    GetMem(Help, Length(HelpStr)+1);
-    Move(HelpStr, Help^, Length(HelpStr)+1);
+    If HelpStr<>'' then
+	begin
+	  GetMem(Help, Length(HelpStr)+1);
+      Move(HelpStr, Help^, Length(HelpStr)+1);
+	end else begin
+	  Help:=nil;
+	end;
     OnHeap:=True;
     Enabled:=True;
   end;
@@ -290,6 +295,8 @@ procedure DrawItem(SubMnu: SubMenuP; Item: ItemP; UserFunc: Pointer);
 var
   S: ShortString;
   OldTextAttr: Byte;
+  WMin: Word;
+  WMax: Word;
 begin
   with SubMnu^, Draw do
   begin
@@ -305,6 +312,20 @@ begin
       TextAttr:=Colors[BodyColor];
     Write(S);
     While WhereX<XH do Write(' ');
+    If Item=Items.Current then
+	begin
+      if Item^.Help <> nil then
+	  begin
+		WMin:=WindMin;
+		WMax:=WindMax;
+		Window(1,1,80,25);
+        GoToXY(1, YHelp);
+		TextAttr:=Colors[HelpColor];
+	    Write(string(Item^.Help^));
+  	    ClrEOL;
+		Window(Lo(WMin)+1, Hi(WMin)+1, Lo(WMax)+1, Hi(WMax)+1);
+	  end;
+	end;
     TextAttr:=OldTextAttr;
   end;
 end;
