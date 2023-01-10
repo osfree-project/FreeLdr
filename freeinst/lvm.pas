@@ -95,6 +95,19 @@ type
   LBA=LongWord;
   Cardinal32=Longword;
   ADDRESS=Pointer;
+
+// @todo check real packing!!!
+  TDriveControl=record
+    DriveNumber: CARDINAL32;                   (* OS/2 Drive Number for this drive. *)
+    DriveSize: CARDINAL32;                     (* The total number of sectors on the drive. *)
+    DriveSerialNumber: DWord;            (* The serial number assigned to this drive.  For info. purposes only. *)
+    DriveHandle: ADDRESS;                      (* Handle used for operations on the disk that this record corresponds to. *)
+    CylinderCount: CARDINAL32;                 (* The number of cylinders on the drive. *)
+    HeadsPerCylinder: CARDINAL32;             (* The number of heads per cylinder for this drive. *)
+    SectorsPerTrack: CARDINAL32;              (* The number of sectors per track for this drive. *)
+    DriveIsPRM: BOOLEAN;                      (* Set to TRUE if this drive is a PRM. *)
+    Reserved: array[0..2] of byte;              (* Alignment. *)
+  end;
   
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
 procedure LvmCloseEngine();
@@ -106,8 +119,27 @@ function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors
 
 implementation
 
+var
+  DrivesArray: Array of TDriveControl;
+
 {$ifdef OS2}
 {$else}
+(*
+type DISK_GEOMETRY=record
+    Cylinders: LARGE_INTEGER;
+    MediaType: MEDIA_TYPE;
+    TracksPerCylinder: DWORD;
+    SectorsPerTrack: DWORD;
+    BytesPerSector: DWORD;
+  end;
+
+type DISK_GEOMETRY_EX=record
+    Geometry: DISK_GEOMETRY;
+    DiskSize: LARGE_INTEGER;
+    Data: Array[0..0] of BYTE;
+  end;
+*)
+
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
 var
   hdl: HANDLE;
@@ -126,7 +158,24 @@ begin
                     0,
                     0);
 
+    SetLength(DrivesArray, Length(DrivesArray)+1);
+    with DrivesArray[Length(DrivesArray)-1] do
+    begin
+      DriveHandle:=ADDRESS(hdl);
+      DriveNumber:=Drive+1; // @todo DriveNumber is 1 based in LVM?
+(*      DeviceIoControl(hdl,
+                     IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
+                     nil,
+                     0,
+                     buf,
+                     bufsize,
+                     @bytes,
+                     nil);
+  *)
+    end;
+
   // @todo fill drive information array
+
     if hdl <> INVALID_HANDLE_VALUE then
     begin
       CloseHandle(hdl); // @todo move to LvmCloseEngine
