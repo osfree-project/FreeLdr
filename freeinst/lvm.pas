@@ -42,7 +42,7 @@ uses
 {$ifdef Windows}
   Windows,
 {$endif}
-  SysUtils;
+  StrUtils, SysUtils;
   
 const
   LVM_ENGINE_NO_ERROR                          = 0;
@@ -127,7 +127,34 @@ var
 
 {$ifdef OS2}
 {$else}
-(*
+
+{$ifdef Windows}
+const
+  IOCTL_STORAGE_QUERY_PROPERTY = $2D1400;
+  
+type 
+STORAGE_PROPERTY_QUERY = packed record
+  PropertyId: DWORD;
+  QueryType: DWORD;
+  AdditionalParameters: array[0..3] of Byte;
+end;
+
+STORAGE_DEVICE_DESCRIPTOR = packed record
+  Version: ULONG;
+  Size: ULONG;
+  DeviceType: Byte;
+  DeviceTypeModifier: Byte;
+  RemovableMedia: Boolean;
+  CommandQueueing: Boolean;
+  VendorIdOffset: ULONG;
+  ProductIdOffset: ULONG;
+  ProductRevisionOffset: ULONG;
+  SerialNumberOffset: ULONG;
+  STORAGE_BUS_TYPE: DWORD;
+  RawPropertiesLength: ULONG;
+  RawDeviceProperties: array[0..511] of Byte;
+end;
+
 type DISK_GEOMETRY=record
     Cylinders: LARGE_INTEGER;
     MediaType: MEDIA_TYPE;
@@ -141,51 +168,98 @@ type DISK_GEOMETRY_EX=record
     DiskSize: LARGE_INTEGER;
     Data: Array[0..0] of BYTE;
   end;
-*)
+
+const
+  IOCTL_DISK_GET_DRIVE_GEOMETRY_EX=458912;
+{$endif}
 
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
 {$ifdef Windows}
+type
+  PCharArray = ^TCharArray;
+  TCharArray = array[0..32767] of Char;
 var
   hdl: HANDLE;
   s: AnsiString;
   Drive: Integer;
+  DISKGEOMETRY: DISK_GEOMETRY_EX;
+  buffer: ^DISK_GEOMETRY;
+  bytes: longword;
+  
+  /////////
+  Returned: Cardinal;
+  Status: LongBool;
+  PropQuery: STORAGE_PROPERTY_QUERY;
+  DeviceDescriptor: STORAGE_DEVICE_DESCRIPTOR;
+  PCh: PChar;  
 {$endif}
 begin
 {$ifdef Windows}
-  for Drive:=0 to 15 do
-  begin
-    // create a handle to the device
-    s := '\\.\PhysicalDrive' + IntToStr(Drive);
-    hdl:=CreateFileA(PChar(s),
-                    GENERIC_READ or GENERIC_WRITE,
-                    FILE_SHARE_READ or FILE_SHARE_WRITE,
-                    nil,
-                    OPEN_EXISTING,
-                    0,
-                    0);
+	  for Drive:=0 to 15 do
+	  begin
+	// create a handle to the device
+	s := '\\.\PhysicalDrive' + IntToStr(Drive);
+	hdl:=CreateFileA(PChar(s),
+					GENERIC_READ or GENERIC_WRITE,
+					FILE_SHARE_READ or FILE_SHARE_WRITE,
+					nil,
+					OPEN_EXISTING,
+					0,
+					0);
 
-    SetLength(DrivesArray, Length(DrivesArray)+1);
-    with DrivesArray[Length(DrivesArray)-1] do
-    begin
-      DriveHandle:=ADDRESS(hdl);
-      DriveNumber:=Drive+1; // @todo DriveNumber is 1 based in LVM?
-(*      DeviceIoControl(hdl,
-                     IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-                     nil,
-                     0,
-                     buf,
-                     bufsize,
-                     @bytes,
-                     nil);
-  *)
-    end;
+	if hdl <> INVALID_HANDLE_VALUE then 
+	begin
+		SetLength(DrivesArray, Length(DrivesArray)+1);
+		with DrivesArray[Length(DrivesArray)-1] do
+		begin
+		DriveHandle:=ADDRESS(hdl);
+		DriveNumber:=Drive+1; // @todo DriveNumber is 1 based in LVM?
 
-  // @todo fill drive information array
+(*		writeln(DeviceIoControl(hdl,
+						IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
+						nil,
+						0,
+						buffer,
+						sizeof(DISKGEOMETRY),
+						@bytes,
+						nil));
+		writeln('bytes', bytes);
+		writeln(TLargeInteger (DISKGEOMETRY.Geometry.Cylinders));*)
 
-    if hdl <> INVALID_HANDLE_VALUE then
-    begin
-      CloseHandle(hdl); // @todo move to LvmCloseEngine
-    end;
+		ZeroMemory(@PropQuery, SizeOf(PropQuery));
+		ZeroMemory(@DeviceDescriptor, SizeOf(DeviceDescriptor));
+
+		DeviceDescriptor.Size := SizeOf(DeviceDescriptor);
+
+		Status := DeviceIoControl(
+					hdl,
+					IOCTL_STORAGE_QUERY_PROPERTY,
+					@PropQuery,
+					SizeOf(PropQuery),
+					@DeviceDescriptor,
+					DeviceDescriptor.Size,
+					Returned,
+					nil
+				);
+
+		if not Status then RaiseLastOSError;
+
+		if DeviceDescriptor.SerialNumberOffset <> 0 then
+		begin
+			PCh := @PCharArray(@DeviceDescriptor)^[DeviceDescriptor.SerialNumberOffset];
+			DriveSerialNumber:=HexToBin(PCh, PChar(@Result), SizeOf(Cardinal));
+		end;
+		DriveIsPRM:=DeviceDescriptor.RemovableMedia;
+		readln;
+		end;
+	end;
+	
+	//@todo fill drive information array
+	
+	if hdl <> INVALID_HANDLE_VALUE then
+	begin
+		CloseHandle(hdl); // @todo move to LvmCloseEngine
+	end;
   end;
 {$endif}
   result:=LVM_ENGINE_NO_ERROR;
