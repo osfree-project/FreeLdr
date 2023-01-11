@@ -144,11 +144,14 @@ type DISK_GEOMETRY_EX=record
 *)
 
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
+{$ifdef Windows}
 var
   hdl: HANDLE;
   s: AnsiString;
   Drive: Integer;
+{$endif}
 begin
+{$ifdef Windows}
   for Drive:=0 to 15 do
   begin
     // create a handle to the device
@@ -184,7 +187,7 @@ begin
       CloseHandle(hdl); // @todo move to LvmCloseEngine
     end;
   end;
-
+{$endif}
   result:=LVM_ENGINE_NO_ERROR;
 end;
 
