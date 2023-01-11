@@ -39,7 +39,10 @@ under Win32/Linux/DOS it emulates required functions.}
 interface
 
 uses
-  Windows, SysUtils;
+{$ifdef Windows}
+  Windows,
+{$endif}
+  SysUtils;
   
 const
   LVM_ENGINE_NO_ERROR                          = 0;
