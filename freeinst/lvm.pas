@@ -156,8 +156,8 @@ STORAGE_DEVICE_DESCRIPTOR = packed record
 end;
 
 type DISK_GEOMETRY=record
-    Cylinders: LARGE_INTEGER;
-    MediaType: MEDIA_TYPE;
+    Cylinders: Int64;
+    MediaType: Integer;
     TracksPerCylinder: DWORD;
     SectorsPerTrack: DWORD;
     BytesPerSector: DWORD;
@@ -165,12 +165,13 @@ type DISK_GEOMETRY=record
 
 type DISK_GEOMETRY_EX=record
     Geometry: DISK_GEOMETRY;
-    DiskSize: LARGE_INTEGER;
+    DiskSize: int64;
     Data: Array[0..0] of BYTE;
   end;
+  PDISK_GEOMETRY_EX=^DISK_GEOMETRY_EX;
 
 const
-  IOCTL_DISK_GET_DRIVE_GEOMETRY_EX=458912;
+  IOCTL_DISK_GET_DRIVE_GEOMETRY_EX = $00700A0;
 {$endif}
 
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
@@ -182,9 +183,7 @@ var
   hdl: HANDLE;
   s: AnsiString;
   Drive: Integer;
-  DISKGEOMETRY: DISK_GEOMETRY_EX;
-  buffer: ^DISK_GEOMETRY;
-  bytes: longword;
+  buffer: DISK_GEOMETRY_EX;
   
   /////////
   Returned: Cardinal;
@@ -207,6 +206,7 @@ begin
 					0,
 					0);
 
+
 	if hdl <> INVALID_HANDLE_VALUE then 
 	begin
 		SetLength(DrivesArray, Length(DrivesArray)+1);
@@ -214,17 +214,6 @@ begin
 		begin
 		DriveHandle:=ADDRESS(hdl);
 		DriveNumber:=Drive+1; // @todo DriveNumber is 1 based in LVM?
-
-(*		writeln(DeviceIoControl(hdl,
-						IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-						nil,
-						0,
-						buffer,
-						sizeof(DISKGEOMETRY),
-						@bytes,
-						nil));
-		writeln('bytes', bytes);
-		writeln(TLargeInteger (DISKGEOMETRY.Geometry.Cylinders));*)
 
 		ZeroMemory(@PropQuery, SizeOf(PropQuery));
 		ZeroMemory(@DeviceDescriptor, SizeOf(DeviceDescriptor));
@@ -250,7 +239,23 @@ begin
 			DriveSerialNumber:=HexToBin(PCh, PChar(@Result), SizeOf(Cardinal));
 		end;
 		DriveIsPRM:=DeviceDescriptor.RemovableMedia;
-		readln;
+
+		Status := DeviceIoControl(hdl,
+						IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
+						nil,
+						0,
+						@buffer,
+						sizeof(buffer),
+						returned,
+						nil);
+
+		if not Status then RaiseLastOSError;
+
+		//DriveSize:=buffer.disksize/buffer.geometry.BytesPerSector;
+		SectorsPerTrack:=buffer.geometry.SectorsPerTrack;
+		CylinderCount:=buffer.geometry.cylinders;
+		HeadsPerCylinder:=buffer.geometry.TracksPerCylinder;
+
 		end;
 	end;
 	
