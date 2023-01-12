@@ -796,7 +796,7 @@ begin
   Writeln(' '#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205);
 end;
 
-Procedure DriveInfo;
+Procedure SelectDrive;
 const
   Colors : MenuColorArray =
   ($17,                      {FrameColor}
@@ -1032,7 +1032,7 @@ DriveT := GetDriveType(drive1[1]);
   OldExitProc   := ExitProc;
   ExitProc      := @MyExitProc;
 
-  DriveInfo;              // Ask user which drive to install to.
+  SelectDrive;              // Ask user which drive to install to.
 
   Repeat
     ClrScr;
@@ -1076,8 +1076,8 @@ DriveT := GetDriveType(drive1[1]);
       Ord(MBackUpBootBlock): BackUp_BootBlock;
       Ord(MRestoreMBR): Restore_MBR_Sector;
       Ord(MRestoreBootBlock): Restore_Bootblock;
-      Ord(MChangePArtition): Begin
-           DriveInfo;
+      Ord(MChangePartition): Begin
+           SelectDrive;
            End;
       Ord(Mexit): break;
     end;
