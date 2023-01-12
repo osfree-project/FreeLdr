@@ -29,6 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 }
 
+{$H-}
+
 unit tpmenu;
 
 interface
@@ -206,7 +208,7 @@ begin
   CurrentMenu^.Active:=SM;
 end;
 
-procedure MenuItem(NameStr : string; {Name of item}
+procedure MenuItem(NameStr : shortstring; {Name of item}
                    DisplayPosP : Byte; {Offset from upper left corner of menu for item}
                    SelectPosP : Byte; {Position within namestr to hilite and select from}
                    KeyP : MenuKey; {Key to return when item is selected}

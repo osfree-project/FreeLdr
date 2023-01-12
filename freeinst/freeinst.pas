@@ -797,17 +797,44 @@ begin
 end;
 
 Procedure DriveInfo;
+const
+  Colors : MenuColorArray =
+  ($17,                      {FrameColor}
+    $4E,                     {HeaderColor}
+    WhiteOnBlue,             {BodyColor}
+    BlackOnCyan,             {SelectColor}
+    $1E,                     {HiliteColor}
+    BlackOnLtGray,           {HelpColor}
+    $17,                     {DisabledColor}
+    $03                      {ShadowColor}
+    );
+
 Var
  Drives: DriveSet;
  Drive3: Char;
  Desc: String;
+ Pstn: Byte;
+type
+  MakeCommands =             {codes returned by each menu selection}
+  (Mnone                    {no command}
+  );
+var
+  W: WindowPtr;
+  YN: Menu;
+  SelectKey: Char;
 Begin
-// This program outputs a list of drives and their type
-GetValidDrives( Drives );
-Writeln( 'This system has the following drives available for install: ' );
-Writeln;
-for Drive3 := 'A' to 'Z' do
-  if Drive3 in Drives then IF GetDriveType(drive3) IN [dtFloppy,dthdfat,dthdfat32,dthdhpfs,dthdjfs,
+  GetValidDrives( Drives );
+
+  ClrScr;
+  Writeln( 'This system has the following drives available for install: ' );
+  Writeln;
+
+  YN:=NewMenu([], nil);
+  SubMenu(20, 5, 0, Vertical, BoldFrameChars, Colors, '');
+
+  Pstn:=1;
+  for Drive3 := 'A' to 'Z' do
+    if Drive3 in Drives then IF GetDriveType(drive3) IN [dtFloppy,dthdfat,dthdfat32,dthdhpfs,dthdjfs,
                                                        dthdntfs, dthdext2] Then
     begin
       case GetDriveType( Drive3 ) of
@@ -826,13 +853,15 @@ for Drive3 := 'A' to 'Z' do
         dtNDFS32    : Desc := 'Netdrive virtual drive';
         dtInvalid   : Desc := 'Invalid or unknown drive type';
       end;
-      Writeln( Drive3,': '+Desc );
+      MenuItem(Drive3+': '+Desc, Pstn, 1, Ord(Drive3), '');
+	  Inc(Pstn);
     end;
-Writeln;
-Write('Select Driveletter (A..Z) for install ');
-Drive1 := upcase(Readkey) + ':' ;
-Drive  := StrPCopy(Drive,drive1);
-DriveT := GetDriveType(drive1[1]);
+
+  ResetMenu(YN);
+
+  Drive1 := upcase(Chr(MenuChoice(YN, SelectKey))) + ':' ;
+  Drive  := StrPCopy(Drive,drive1);
+  DriveT := GetDriveType(drive1[1]);
 end;
 
 
@@ -943,7 +972,7 @@ var
 
 procedure MyExitProc;
 begin
-  LvmCloseEngine();
+  LvmCloseEngine();      { Close all drives }
   ExitProc:=OldExitProc; { reset the old exitproc }
 end;
 

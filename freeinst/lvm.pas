@@ -103,13 +103,13 @@ type
   TDriveControl=record
     DriveNumber: CARDINAL32;                   (* OS/2 Drive Number for this drive. *)
     DriveSize: CARDINAL32;                     (* The total number of sectors on the drive. *)
-    DriveSerialNumber: DWord;            (* The serial number assigned to this drive.  For info. purposes only. *)
+    DriveSerialNumber: DWord;                  (* The serial number assigned to this drive.  For info. purposes only. *)
     DriveHandle: ADDRESS;                      (* Handle used for operations on the disk that this record corresponds to. *)
     CylinderCount: CARDINAL32;                 (* The number of cylinders on the drive. *)
-    HeadsPerCylinder: CARDINAL32;             (* The number of heads per cylinder for this drive. *)
-    SectorsPerTrack: CARDINAL32;              (* The number of sectors per track for this drive. *)
-    DriveIsPRM: BOOLEAN;                      (* Set to TRUE if this drive is a PRM. *)
-    Reserved: array[0..2] of byte;              (* Alignment. *)
+    HeadsPerCylinder: CARDINAL32;              (* The number of heads per cylinder for this drive. *)
+    SectorsPerTrack: CARDINAL32;               (* The number of sectors per track for this drive. *)
+    DriveIsPRM: BOOLEAN;                       (* Set to TRUE if this drive is a PRM. *)
+    Reserved: array[0..2] of byte;             (* Alignment. *)
   end;
   
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
@@ -259,19 +259,21 @@ begin
 		end;
 	end;
 	
-	//@todo fill drive information array
-	
-	if hdl <> INVALID_HANDLE_VALUE then
-	begin
-		CloseHandle(hdl); // @todo move to LvmCloseEngine
-	end;
   end;
 {$endif}
   result:=LVM_ENGINE_NO_ERROR;
 end;
 
 procedure LvmCloseEngine();
+var
+	i: integer;
 begin
+	for i:=Low(DrivesArray) to High(DrivesArray) do
+	begin
+{$ifdef windows}
+		CloseHandle(HANDLE(DrivesArray[i].DriveHandle));
+{$endif}
+	end;
 end;
 
 function LvmCommitChanges(): CARDINAL32;
