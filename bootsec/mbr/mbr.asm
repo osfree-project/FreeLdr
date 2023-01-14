@@ -196,7 +196,7 @@ lp3:
 
                 jmp  Err$PartNotFound                      ; active partition not found, panic
 lpEnd:                                                     ; active partition found
-                mov  bx, 0                                 ; Logical partition condition is FALSE
+                xor bx,bx ;mov  bx, 0                                 ; Logical partition condition is FALSE
 
                 jmp  bootFound
 selectPart:
@@ -355,23 +355,8 @@ ReadSec proc near
                 jnz  chs
 lba:
                 pushad
-                call ReadSecLBA                            ; Read by LBA
-                popad
-
-                jc   short chs                             ; if LBA fails, fallback to CHS
-
-                ret
-chs:
-                pushad
-                call ReadSecCHS                            ; Read by CHS
-                popad
-
-                jc   short Err$Read
-return_lb:
-                ret
-ReadSec endp
-
-
+;                call ReadSecLBA                            ; Read by LBA
+;------------------------
 ;
 ; ReadSecLBA:
 ;
@@ -384,7 +369,7 @@ ReadSec endp
 ;               es:di --> partition table entry
 ;
 
-ReadSecLBA proc near
+;ReadSecLBA proc near
                 ;
                 ; int 13h 42h function
                 ; Input:
@@ -412,10 +397,48 @@ ReadSecLBA proc near
                 mov  ah, 42h
 
                 int  13h
-lb2:
-                ret
+;lb2:
+;                ret
 
-ReadSecLBA endp
+;ReadSecLBA endp
+
+;------------------------
+                popad
+
+;                jc   short chs                             ; if LBA fails, fallback to CHS
+                jnc   short return_lb                       ; if LBA fails, fallback to CHS, else return
+chs:
+                pushad
+;                call ReadSecCHS                            ; Read by CHS
+;-----------------
+;
+; ReadSecCHS:
+;
+;               Reads a sector
+;               using CHS,
+;               to 0x7c0:0x0
+;               at the beginning of the partition,
+;               described by part table entry at ds:[si]
+;
+;               ds:si --> partition descriptor in PT
+;
+                ;
+                ; phys disk no. in dl
+                mov  cx, word ptr [di + 2]                 ; cyl. and sector
+                mov  dh, byte ptr [di + 1]                 ; head no.
+
+                mov  bx, 7c00h
+
+                mov  ax, 0201h                             ; ah = 2 -- function and al = 1 -- count of sectors
+                int  13h                                   ; read one sector at 0x7c0:0x0
+;----------------
+                popad
+
+                jc   short Err$Read
+return_lb:
+                ret
+ReadSec endp
+
 
 
 if 0
@@ -461,31 +484,6 @@ pp2:
 endif
 
 
-;
-; ReadSecCHS:
-;
-;               Reads a sector
-;               using CHS,
-;               to 0x7c0:0x0
-;               at the beginning of the partition,
-;               described by part table entry at ds:[si]
-;
-;               ds:si --> partition descriptor in PT
-;
-
-ReadSecCHS proc near
-                ;
-                ; phys disk no. in dl
-                mov  cx, word ptr [di + 2]                 ; cyl. and sector
-                mov  dh, byte ptr [di + 1]                 ; head no.
-
-                mov  bx, 7c00h
-
-                mov  ax, 0201h                             ; ah = 2 -- function and al = 1 -- count of sectors
-                int  13h                                   ; read one sector at 0x7c0:0x0
-
-                ret
-ReadSecCHS endp
 
 padSize        equ         512 - ($ - start + signature - vars + 2)        ; padding size
 
