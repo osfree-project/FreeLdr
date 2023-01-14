@@ -79,13 +79,12 @@ start proc far
 
                 cld
                 ; scan strings forward
-                mov  si, 7c00h                             ;
-                mov  di, 600h                              ;
-                mov  cx, 100h                              ; Relocate itself
-                rep  movsw                                 ;
-
+                mov  si, 7c00h + (boot - start)            ; 
+                mov  di, 600h + (boot - start)             ;
                 push ax
-                push 600h + (boot - start)                 ;
+                push di
+                mov  cx, 200h - (boot - start + 1)         ; Relocate itself
+                rep  movsb                                 ;
 
                 retf                                       ; "return" to the new location at 0x0:0x600 + boot
 boot:
