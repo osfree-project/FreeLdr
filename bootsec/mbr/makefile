@@ -8,6 +8,7 @@ PROJ0      = mbr
 TRGT       = $(PROJ).bin
 DEFINES    =
 ADD_ASMOPT = $(DEFINES) -i=$(%ROOT)include
+
 STARTUP    =
 ALL        = $(p)$(PROJ0)$(e)
 srcfiles   = $(STARTUP) $(ALL)

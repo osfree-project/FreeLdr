@@ -65,7 +65,7 @@ MbrSeg segment para public 'CODE' USE16
                 org 7c00h
 start proc far
 
-.386
+.286
                 xor  ax, ax                                ; Set stack
                 mov  bp, 7c00h - EXT_PARAMS_SIZE           ; now bp points at the ext_params
 
@@ -83,7 +83,7 @@ start proc far
                 mov  di, 600h + (boot - start)             ;
                 push ax
                 push di
-                mov  cx, 200h - (boot - start + 1)         ; Relocate itself
+                mov  cx, 200h - (boot - start)             ; Relocate itself
                 rep  movsb                                 ;
 
                 retf                                       ; "return" to the new location at 0x0:0x600 + boot
@@ -176,7 +176,7 @@ searchPartition:
 
                 ;pop  ds                                    ; ds --> ScrSeg = 0x7c0 (points to the new MBR)
 
-                cmp  ax, 0                                 ;
+                test ax, ax                                ; cmp  ax, 0                                 ;
                 jz   findActive                            ; if BootPart = 0, then boot from active partition
                 jmp  selectPart                            ; else select partition with number in BootPart byte.
 
@@ -283,7 +283,7 @@ endCheck:
 
 endif
 
-                mov  bx, 0                                 ; Logical partition condition is FALSE
+                xor bx, bx                                 ;mov  bx, 0   ; Logical partition condition is FALSE
 bootFound:
                 ; Boot partition found                     ; ds:si --> Part. descriptor of boot partition
                 call ReadSec                               ; Read bootsector into 0x7c0:0x0
@@ -327,9 +327,9 @@ start endp
 
 Err$Read:
                 mov  al, 'R'
-                jmp  short Err
+                db   0bbh                                  ; MOV BX, xx opcode, hack instead of jmp  short Err
 Err$PartNotFound:
-                mov  al, 'P'
+                mov  al, 'P'                               ; size of this instruction always must be eq 2
 Err:
                 mov  ah, 0eh
                 xor  bx, bx
