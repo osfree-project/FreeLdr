@@ -26,8 +26,6 @@ procedure Close_Disk(DevHandle: Hfile);
 procedure Lock_Disk(DevHandle: Hfile);
 procedure Unlock_Disk(DevHandle: Hfile);
 
-//procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
-//procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
 procedure Backup_MBR_Sector;
 procedure Restore_MBR_Sector;
 
@@ -87,72 +85,6 @@ begin
   end;
   GetNumDrives := usDrives;
 end;
-
-Procedure MBR_Sector(Drivenum: AnsiString; VAR MBRbuffer; IOcmd: Ulong);
-Var
-  FH            : Integer;
-  s3            : String[3];
-  hdl           : HANDLE;
-  DataLen       : LongWord;
-  s             : AnsiString;
-
-Begin
-  Drivenum := pred((PChar(DriveNum)^)); // Physical drives in windoze begin from 0 not 1 
-  s := '\\.\PhysicalDrive' + Drivenum;
-  hdl := CreateFile(PChar(s),
-                    GENERIC_READ or GENERIC_WRITE,
-                    FILE_SHARE_READ or FILE_SHARE_WRITE,
-                    nil, OPEN_EXISTING, 0, 0);
-
-  if hdl = INVALID_HANDLE_VALUE then
-  begin
-    Writeln('CreateFile GetHandle error: return code = ', hdl);
-    Halt(1);
-  end;
-
-  case IOcmd of
-    BIOSDISK_READ:
-    begin
-      if ReadFile(hdl, MBRbuffer, 512, DataLen, nil) = false then
-      begin
-        Writeln('ReadFile (Disk_I/O MBR sector) error');
-        CloseHandle(hdl);
-        Halt(1);
-      end;
-      i:=0;
-      Repeat
-        Str(i:3,s3);
-        If pos(' ',s3) = 1 Then s3[1] := '0';
-        If pos(' ',s3) = 2 Then s3[2] := '0';
-        i:=succ(i);
-        If I > 999 Then exit;
-      Until NOT FileExists ('MBR_sect.'+s3);
-      Writeln('Backup bootsector file = MBR_sect.',s3);
-      FH := FileCreate( 'MBR_sect.'+s3);
-      FileWrite( FH, Sector0, Sector0Len );
-      FileClose( FH );
-    end;
-    BIOSDISK_WRITE:
-    if WriteFile(hdl, MBRbuffer, 512, DataLen, nil) = false then
-    begin
-      Writeln('WriteFile (Disk_I/O MBR sector) error');
-      CloseHandle(hdl);
-      Halt(1);
-    end;
-  end;
-
-  CloseHandle(hdl);
-End;
-
-//procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
-//begin
-//  MBR_Sector(DriveNum, MBRBuffer, BIOSDISK_READ)
-//end;
-
-//procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
-//begin
-//  MBR_Sector(DriveNum, MBRBuffer, BIOSDISK_WRITE)
-//end;
 
 // Backup MBR sector to a file
 Procedure Backup_MBR_sector;
