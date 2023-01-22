@@ -26,15 +26,15 @@ procedure Close_Disk(DevHandle: Hfile);
 procedure Lock_Disk(DevHandle: Hfile);
 procedure Unlock_Disk(DevHandle: Hfile);
 
-procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
-procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
+//procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
+//procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
 procedure Backup_MBR_Sector;
 procedure Restore_MBR_Sector;
 
 implementation
 
 uses
-  Common, Strings, SysUtils, Crt, Dos;
+  Common, Strings, SysUtils, Crt, Dos, MBR;
 
 const
   BIOSDISK_READ               = $0;
@@ -144,31 +144,31 @@ Begin
   CloseHandle(hdl);
 End;
 
-procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
-begin
-  MBR_Sector(DriveNum, MBRBuffer, BIOSDISK_READ)
-end;
+//procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
+//begin
+//  MBR_Sector(DriveNum, MBRBuffer, BIOSDISK_READ)
+//end;
 
-procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
-begin
-  MBR_Sector(DriveNum, MBRBuffer, BIOSDISK_WRITE)
-end;
+//procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
+//begin
+//  MBR_Sector(DriveNum, MBRBuffer, BIOSDISK_WRITE)
+//end;
 
 // Backup MBR sector to a file
 Procedure Backup_MBR_sector;
 
 Var
   usNumDrives : UShort; // Data return buffer
-  Drive       : Char;
+  Drive       : Byte;
 Begin
   // Request a count of the number of partitionable disks in the system
   usNumDrives := GetNumDrives;
 
   Writeln('Windows reports ',usNumDrives,' partitionable disk(s) available.');
   Write('Input disknumber for MBR backup (1..',usNumDrives,'): ');
-  Readln(Drive);
+  Drive:=Ord(ReadKey)-Ord('1')+1;
 
-  Read_MBR_Sector(drive,sector0);
+  ReadMBRSector(drive,sector0);
   Writeln('Press Enter to continue...');
   Readln;
 End;
@@ -198,7 +198,7 @@ Begin
     Writeln('Restoring ',filename, 'to bootsector');
     FileRead( FH, Sector0, Sector0Len );
     FileClose( FH );
-    Write_MBR_Sector(drive,sector0);
+    WriteMBRSector(byte(drive),sector0);
   End
   Else
     Writeln('Sorry, the file ',filename,' returned error ',-FH);

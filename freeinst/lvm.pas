@@ -100,7 +100,7 @@ type
   ADDRESS=Pointer;
 
 // @todo check real packing!!!
-  TDriveControl=record
+  TDriveControl=packed record
     DriveNumber: CARDINAL32;                   (* OS/2 Drive Number for this drive. *)
     DriveSize: CARDINAL32;                     (* The total number of sectors on the drive. *)
     DriveSerialNumber: DWord;                  (* The serial number assigned to this drive.  For info. purposes only. *)
@@ -111,19 +111,21 @@ type
     DriveIsPRM: BOOLEAN;                       (* Set to TRUE if this drive is a PRM. *)
     Reserved: array[0..2] of byte;             (* Alignment. *)
   end;
+
+  TDrivesArray=Array of TDriveControl;
   
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
 procedure LvmCloseEngine();
 function LvmCommitChanges(): CARDINAL32;
-function LvmGetDriveControlData: CARDINAL32;
+function LvmGetDriveControlData: TDrivesArray;
 function LvmFreeEngineMemory(LVMObject: ADDRESS): CARDINAL32;
-function LvmReadSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Read: CARDINAL32; Buffer: ADDRESS): CARDINAL32;
-function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; Buffer: ADDRESS): CARDINAL32;
+function LvmReadSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Read: CARDINAL32; var Buffer): CARDINAL32;
+function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; var Buffer): CARDINAL32;
 
 implementation
 
 var
-  DrivesArray: Array of TDriveControl;
+  DrivesArray: TDrivesArray;
 
 {$ifdef OS2}
 {$else}
@@ -281,9 +283,9 @@ begin
   result:=LVM_ENGINE_NO_ERROR;
 end;
 
-function LvmGetDriveControlData: CARDINAL32;
+function LvmGetDriveControlData: TDrivesArray;
 begin
-  result:=LVM_ENGINE_NO_ERROR;
+  result:=DrivesArray;
 end;
 
 function LvmFreeEngineMemory(LVMObject: ADDRESS): CARDINAL32;
@@ -291,14 +293,40 @@ begin
   result:=LVM_ENGINE_NO_ERROR;
 end;
 
-function LvmReadSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Read: CARDINAL32; Buffer: ADDRESS): CARDINAL32;
+function LvmReadSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Read: CARDINAL32; var Buffer): CARDINAL32;
+var
+	i: integer;
+	DataLen: LongWord;
 begin
-  result:=LVM_ENGINE_NO_ERROR;
+	for i:=Low(DrivesArray) to High(DrivesArray) do
+	begin
+{$ifdef windows}
+		if DrivesArray[i].DriveNumber=Drive_Number then
+		begin
+			SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
+			if ReadFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Read*512, DataLen, nil)=false then writeln('error');
+			break;
+		end;
+{$endif}
+	end;
 end;
 
-function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; Buffer: ADDRESS): CARDINAL32;
+function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; var Buffer): CARDINAL32;
+var
+	i: integer;
+	DataLen: LongWord;
 begin
-  result:=LVM_ENGINE_NO_ERROR;
+	for i:=Low(DrivesArray) to High(DrivesArray) do
+	begin
+{$ifdef windows}
+		if DrivesArray[i].DriveNumber=Drive_Number then
+		begin
+			SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
+			WriteFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Write*512, DataLen, nil);
+			break;
+		end;
+{$endif}
+	end;
 end;
 {$endif}
 

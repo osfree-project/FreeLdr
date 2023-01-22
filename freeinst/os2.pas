@@ -27,9 +27,9 @@ Var
 begin
   rc := DosQuerySysInfo( qsv_boot_drive, qsv_boot_drive, Res, Sizeof( Res ));
   If rc = no_Error then
-    Result := Chr( Res + ord('A') - 1 )
+    SysGetBootDrive := Chr( Res + ord('A') - 1 )
   else
-    Result := #0;
+    SysGetBootDrive := #0;
 end;
 
 function SysGetDriveType(Drive: Char): TDriveType;
@@ -43,7 +43,7 @@ Var
   //DiskSize  : Word;
 
 begin
-  Result := dtInvalid;
+  SysGetDriveType := dtInvalid;
   BufLen := 100;
   GetMem( FSQb, BufLen );
   DrvName := Drive+':'#0;
@@ -59,34 +59,34 @@ begin
     {$endif}
       If strComp( aName, 'FAT' ) = 0 then
         If Drive <= 'B' then
-          Result := dtFloppy
+          SysGetDriveType := dtFloppy
         else
-          Result := dtHDFAT
+          SysGetDriveType := dtHDFAT
       else if strComp( aName, 'HPFS' ) = 0 then
         If Drive <= 'B' then
-          Result := dtFloppy
+          SysGetDriveType := dtFloppy
         else
-          Result := dtHDHPFS
+          SysGetDriveType := dtHDHPFS
       else If StrComp( aName, 'NETWARE' ) = 0 then
-        Result := dtNovellNet
+        SysGetDriveType := dtNovellNet
       else If StrComp( aName, 'CDFS' ) = 0 then
-        Result := dtCDRom
+        SysGetDriveType := dtCDRom
       else If StrComp( aName, 'TVFS' ) = 0 then
-        Result := dtTVFS
+        SysGetDriveType := dtTVFS
       else If StrComp( aName, 'ext2' ) = 0 then
-        Result := dtHDExt2
+        SysGetDriveType := dtHDExt2
       else If StrComp( aName, 'LAN' ) = 0 then
-        Result := dtLAN
+        SysGetDriveType := dtLAN
       else If StrComp( aName, 'JFS' ) = 0 then
-        Result := dthdJFS
+        SysGetDriveType := dthdJFS
       else If StrComp( aName, 'FAT32' ) = 0 then
-        Result := dthdFAT32
+        SysGetDriveType := dthdFAT32
       else If StrComp( aName, 'NTFS' ) = 0 then
-        Result := dthdNTFS
+        SysGetDriveType := dthdNTFS
       else If StrComp( aName, 'RAMFS' ) = 0 then
-        Result := dtRAMFS
+        SysGetDriveType := dtRAMFS
       else If StrComp( aName, 'NDFS32' ) = 0 then
-        Result := dtNDFS32;
+        SysGetDriveType := dtNDFS32;
     end;
 
   FreeMem( FSQb, 100 );
@@ -98,7 +98,7 @@ var
 begin
   DosQueryCurrentDisk(CurDrive, res);
   if res <> 0
-    then result := res
-    else result := 0;
+    then SysGetValidDrives := res
+    else SysGetValidDrives := 0;
 end;
 

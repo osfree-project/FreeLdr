@@ -65,7 +65,8 @@ Uses
 {$ENDIF}
               Strings, SysUtils, Crt, Dos,
               tpcrt, tpwindow, colordef, tpmenu, // Turbo Professional
-			  lvm; // OS/2 Logical Volume Manager
+			  lvm, // OS/2 Logical Volume Manager
+mbr; //MBR
 
 
 {$IFDEF FPC}
@@ -155,7 +156,7 @@ Type
     End;
 
 VAR
-  Drive:        AnsiString;
+  Drive:        Byte;
   bootNr:       Byte;
   FH:           Integer;
   FreeMBR:      Sector0Buf;
@@ -171,7 +172,7 @@ VAR
 
 Begin
 Write('Input disknumber for new MBR install (1''st disk is nr 1): ');
-Readln(Drive);
+Drive:=Ord(ReadKey)-Ord('1')+1;
 ClrScr;
 Writeln;
 
@@ -251,8 +252,8 @@ Writeln('Primary partitions are numbered from 1-4    ');
 Writeln('Logical partitions are numbered from 5-255');
 Writeln;
 Write('Which Partition number do you want to boot from (see numbers above) ? ');
-Readln(BootNr);
-Read_MBR_Sector(Drive, sector0);
+BootNr:=Ord(ReadKey)-Ord('1')+1;
+ReadMBRSector(Drive, sector0);
 FH := FileOpen( drive1+'\boot\sectors\mbr.bin', fmOpenRead OR fmShareDenyNone);
 If FH > 0 Then
   Begin
@@ -262,7 +263,7 @@ If FH > 0 Then
   FreeMBR[$1bc] := chr(BootNr);                     //  Insert partition bootnumber
   FreeMBR[$1bd] := chr($80);                        //  Insert disk boot number
   Sector0 := FreeMBR;
-  Write_MBR_Sector(Drive, sector0);
+  WriteMBRSector(Drive, sector0);
   Writeln(#10,'Your MBR have been upgraded to FreeLDR , Press <Enter> to continue ');
   Readln;
   End
