@@ -36,6 +36,7 @@ interface
 
 procedure ReadMBRSector(DriveNum: Byte; var MBRBuffer);
 procedure WriteMBRSector(DriveNum: Byte; var MBRBuffer);
+function isGPT(DriveNum: Byte): Boolean;
 
 implementation
 

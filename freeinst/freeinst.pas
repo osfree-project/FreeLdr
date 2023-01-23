@@ -63,11 +63,10 @@ Uses
 {$IFDEF LINUX}
               Impl_LNX,
 {$ENDIF}
-              Strings, SysUtils, Crt, Dos,
+              Strings, SysUtils, StrUtils, Crt, Dos,
               tpcrt, tpwindow, colordef, tpmenu, // Turbo Professional
 			  lvm, // OS/2 Logical Volume Manager
 mbr; //MBR
-
 
 {$IFDEF FPC}
 {$I os2types.pas}
@@ -918,6 +917,47 @@ begin
   FrameChars:=BoldFrameChars;
 end;
 
+// Backup MBR sector to a file
+Procedure Backup_MBR_sector;
+const
+  Colors : MenuColorArray =
+  ($17,                      {FrameColor}
+    $4E,                     {HeaderColor}
+    WhiteOnBlue,             {BodyColor}
+    BlackOnCyan,             {SelectColor}
+    YellowOnBlue,            {HiliteColor}
+    BlackOnLtGray,           {HelpColor}
+    $17,                     {DisabledColor}
+    $03                      {ShadowColor}
+    );
+var
+  YN: Menu;
+  SelectKey: Char;
+Var
+  Drive       : Byte;
+  i: integer;
+  DrivesArray: TDrivesArray;
+  p: integer;
+begin
+  YN:=NewMenu([], nil);
+  SubMenu(26, 5, 0, Vertical, BoldFrameChars, Colors, 'Select drive');
+
+	DrivesArray:=LvmGetDriveControlData;
+p:=0;
+	for i:=Low(DrivesArray) to High(DrivesArray) do
+	begin
+inc(p);
+  MenuItem('Physical drive '+IntToStr(DrivesArray[i].DriveNumber)+' ('+IfThen(isGPT(DrivesArray[i].DriveNumber),'GPT','MBR')+')', p, 16, DrivesArray[i].DriveNumber, '');
+	end;
+
+  ResetMenu(YN);
+  Drive:=MenuChoice(YN, SelectKey);
+
+  ReadMBRSector(drive,sector0);
+  Writeln('Press Enter to continue...');
+  Readln;
+End;
+
 procedure ShowWarning;
 const
   Colors : MenuColorArray =
@@ -925,7 +965,7 @@ const
     $4E,                     {HeaderColor}
     WhiteOnRed,              {BodyColor}
     RedOnLtGray,             {SelectColor}
-    RedOnLtGray,             {HiliteColor}
+    YellowOnRed,             {HiliteColor}
     BlackOnLtGray,           {HelpColor}
     $17,                     {DisabledColor}
     $03                      {ShadowColor}
@@ -954,8 +994,8 @@ Begin
 
   YN:=NewMenu([], nil);
   SubMenu(20, 10, 0, Vertical, LotusFrame, Colors, '');
-  MenuItem(' Yes ', 1, 1, Ord(Myes), '');
-  MenuItem(' No ', 2, 1, Ord(Mno), '');
+  MenuItem(' Yes ', 1, 2, Ord(Myes), '');
+  MenuItem(' No ', 2, 2, Ord(Mno), '');
   ResetMenu(YN);
   if MenuChoice(YN, SelectKey)=ord(Mno) then Halt(9);;
 

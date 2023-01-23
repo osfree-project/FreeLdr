@@ -12,7 +12,7 @@ unit Impl_W32;
 interface
 
 uses
-  Windows;
+  Windows ;
 
 type
   Hfile  = LongInt;
@@ -26,7 +26,6 @@ procedure Close_Disk(DevHandle: Hfile);
 procedure Lock_Disk(DevHandle: Hfile);
 procedure Unlock_Disk(DevHandle: Hfile);
 
-procedure Backup_MBR_Sector;
 procedure Restore_MBR_Sector;
 
 implementation
@@ -86,32 +85,6 @@ begin
   GetNumDrives := usDrives;
 end;
 
-// Backup MBR sector to a file
-Procedure Backup_MBR_sector;
-
-Var
-  usNumDrives : UShort; // Data return buffer
-  Drive       : Byte;
-  i: integer;
-  DrivesArray: TDrivesArray;
-begin
-	DrivesArray:=LvmGetDriveControlData;
-	for i:=Low(DrivesArray) to High(DrivesArray) do
-	begin
-	end;
-
-  
-  // Request a count of the number of partitionable disks in the system
-  usNumDrives := GetNumDrives;
-
-  Writeln('Windows reports ',usNumDrives,' partitionable disk(s) available.');
-  Write('Input disknumber for MBR backup (1..',usNumDrives,'): ');
-  Drive:=Ord(ReadKey)-Ord('1')+1;
-
-  ReadMBRSector(drive,sector0);
-  Writeln('Press Enter to continue...');
-  Readln;
-End;
 
 // Restore MBRsector from a file
 Procedure Restore_MBR_sector;
