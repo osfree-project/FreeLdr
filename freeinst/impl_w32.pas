@@ -32,7 +32,7 @@ procedure Restore_MBR_Sector;
 implementation
 
 uses
-  Common, Strings, SysUtils, Crt, Dos, MBR;
+  Common, Strings, SysUtils, Crt, Dos, LVM, MBR;
 
 const
   BIOSDISK_READ               = $0;
@@ -92,7 +92,15 @@ Procedure Backup_MBR_sector;
 Var
   usNumDrives : UShort; // Data return buffer
   Drive       : Byte;
-Begin
+  i: integer;
+  DrivesArray: TDrivesArray;
+begin
+	DrivesArray:=LvmGetDriveControlData;
+	for i:=Low(DrivesArray) to High(DrivesArray) do
+	begin
+	end;
+
+  
   // Request a count of the number of partitionable disks in the system
   usNumDrives := GetNumDrives;
 
