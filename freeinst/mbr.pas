@@ -145,8 +145,6 @@ end;
 
 procedure ReadMBRSector(DriveNum: Byte; var MBRBuffer);
 begin
-	isGPT(DriveNum);
-	MBRDetect(DriveNum);
 	LvmReadSectors(DriveNum, 0, 1, MBRBuffer);
 end;
 
