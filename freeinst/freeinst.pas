@@ -925,7 +925,7 @@ const
     $4E,                     {HeaderColor}
     WhiteOnRed,              {BodyColor}
     RedOnLtGray,             {SelectColor}
-    $1E,                     {HiliteColor}
+    RedOnLtGray,             {HiliteColor}
     BlackOnLtGray,           {HelpColor}
     $17,                     {DisabledColor}
     $03                      {ShadowColor}
@@ -988,7 +988,7 @@ const
     $4E,                     {HeaderColor}
     $08+CyanOnBlue,          {BodyColor}
     BlackOnCyan,             {SelectColor}
-    $1E,                     {HiliteColor}
+    YellowOnBlue,            {HiliteColor}
     BlackOnLtGray,           {HelpColor}
     $17,                     {DisabledColor}
     $03                      {ShadowColor}
@@ -1042,7 +1042,7 @@ DriveT := GetDriveType(drive1[1]);
     Writeln;
     YN:=NewMenu([], nil);
     SubMenu(10, 1, 25, Vertical, BoldFrameChars, Colors, '');
-    MenuItem(' 1: Install new MBR for FreeLDR', 1, 1, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
+    MenuItem(' 1: Install new MBR for FreeLDR', 1, 2, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
     MenuItem(' 2: Install FreeLDR on a partition', 2, 2, Ord(MInstallFreeLdr), 'Install FreeLDR on selected partition');
     MenuItem(' 3: Backup MBR sector', 3, 2, Ord(MBackupMBR), 'Make back up copy of Master Boot Record from selected drive');
     MenuItem(' 4: Backup a BootBlock', 4, 2, Ord(MBackUpBootBlock), 'Make back up copy of Master Boot Record from selected partition');

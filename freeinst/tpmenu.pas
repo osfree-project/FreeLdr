@@ -312,7 +312,18 @@ begin
       TextAttr:=Colors[SelectColor]
     else
       TextAttr:=Colors[BodyColor];
-    Write(S);
+    If Item^.SelectPos>0 then
+	begin
+	  Write(Copy(S, 1, Item^.SelectPos-1));
+      TextAttr:=Colors[HiliteColor];
+	  Write(S[Item^.SelectPos]);
+      If Item=Items.Current then
+        TextAttr:=Colors[SelectColor]
+      else
+        TextAttr:=Colors[BodyColor];
+	  Write(Copy(S, Item^.SelectPos+1, Length(S)-Item^.SelectPos));
+	end else
+	  Write(S);
     While WhereX<XH do Write(' ');
     If Item=Items.Current then
 	begin
