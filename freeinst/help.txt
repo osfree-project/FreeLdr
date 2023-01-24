@@ -1,0 +1,21 @@
+Terms
+
+Disk is a physical storage device
+
+Partition is a any block of disk space which corresponds either to a contiguous region of free space
+
+Volume is a one or more partitions which are seen by the operating system as a single logical allocation unit
+
+Drive is a file system of corresponding Volume
+
+Partition Table is a Disk or Partition special space with information about Disk or Partition structure
+
+MBR is a Master Boot Record which contains boot loader and Partition Table
+
+GPT is a GUID Partition Table
+
+BIOS is a Base I/O Subsystem which can load OS using MBR Bootsector
+
+EFI or UEFI is a modern BIOS replacement. Uses GPT and special Boot Partition to boot OS
+
+Bootsector is a Disk or Partition sector which contains OS boot code
