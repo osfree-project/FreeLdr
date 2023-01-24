@@ -82,7 +82,6 @@ Var
   Drive:        PChar;
   DriveT:       tDrivetype;     // FS type on selected drive
   PartNr:       Byte;           // Partition number
-  ch    :       Char;           // Menu selector
   ifsbuf:       Array[0..1000000] of Char;
 
 {******************************************************************************************}
@@ -819,7 +818,6 @@ type
   (Mnone                    {no command}
   );
 var
-  W: WindowPtr;
   YN: Menu;
   SelectKey: Char;
 Begin
@@ -917,8 +915,7 @@ begin
   FrameChars:=BoldFrameChars;
 end;
 
-// Backup MBR sector to a file
-Procedure Backup_MBR_sector;
+function SelectDisk(): Byte;
 const
   Colors : MenuColorArray =
   ($17,                      {FrameColor}
@@ -934,26 +931,27 @@ var
   YN: Menu;
   SelectKey: Char;
 Var
-  Drive       : Byte;
   i: integer;
   DrivesArray: TDrivesArray;
   p: integer;
 begin
   YN:=NewMenu([], nil);
   SubMenu(26, 5, 0, Vertical, BoldFrameChars, Colors, 'Select drive');
-
-	DrivesArray:=LvmGetDriveControlData;
-p:=0;
-	for i:=Low(DrivesArray) to High(DrivesArray) do
-	begin
-inc(p);
-  MenuItem('Physical drive '+IntToStr(DrivesArray[i].DriveNumber)+' ('+IfThen(isGPT(DrivesArray[i].DriveNumber),'GPT','MBR')+')', p, 16, DrivesArray[i].DriveNumber, '');
-	end;
-
+  DrivesArray:=LvmGetDriveControlData;
+  p:=0;
+  for i:=Low(DrivesArray) to High(DrivesArray) do
+  begin
+    inc(p);
+    MenuItem('Physical drive '+IntToStr(DrivesArray[i].DriveNumber)+' ('+IfThen(isGPT(DrivesArray[i].DriveNumber),'GPT','MBR')+')', p, 16, DrivesArray[i].DriveNumber, '');
+  end;
   ResetMenu(YN);
-  Drive:=MenuChoice(YN, SelectKey);
+  Result:=MenuChoice(YN, SelectKey);
+end;
 
-  ReadMBRSector(drive,sector0);
+// Backup MBR sector to a file
+Procedure Backup_MBR_sector;
+begin
+  ReadMBRSector(SelectDisk,sector0);
   Writeln('Press Enter to continue...');
   Readln;
 End;

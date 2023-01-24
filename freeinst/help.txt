@@ -2,7 +2,7 @@ Terms
 
 Disk is a physical storage device
 
-Partition is a any block of disk space which corresponds either to a contiguous region of free space
+Partition is a any block of disk space which corresponds to a contiguous region of free space
 
 Volume is a one or more partitions which are seen by the operating system as a single logical allocation unit
 

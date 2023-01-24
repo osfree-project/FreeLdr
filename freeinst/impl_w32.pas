@@ -12,7 +12,7 @@ unit Impl_W32;
 interface
 
 uses
-  Windows ;
+  Windows;
 
 type
   Hfile  = LongInt;
