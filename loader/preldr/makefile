@@ -73,15 +73,15 @@ F =
 
 .asm: $(MYDIR)..
 
-$(PATH)..$(SEP)func.$(O): $(MYDIR)..$(SEP)func.c
+$(PATH)..$(SEP)func.$(O): $(MYDIR)func.c
  @$(SAY) CC       $^. $(LOG)
  $(verbose)$(CC) -dSTAGE0 -dSHIFT=0 $(COPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
-$(PATH)..$(SEP)func.$(LO): $(MYDIR)..$(SEP)func.c
+$(PATH)..$(SEP)func.$(LO): $(MYDIR)func.c
  @$(SAY) CC       $^. $(LOG)
  $(verbose)$(CC) -dSTAGE0 -dSHIFT=0 -dSTAGE1_5 -dNO_BLOCK_FILES $(COPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
-$(PATH)..$(SEP)func.$(SO): $(MYDIR)..$(SEP)func.c
+$(PATH)..$(SEP)func.$(SO): $(MYDIR)func.c
  $(verbose)$(SAY) CC       $^. $(LOG)
  $(verbose)$(CC) -dSTAGE0 -dSHIFT=$(SHIFT) $(COPT) -fr=$^*.err -fo=$^@ $[@ $(LOG)
 
