@@ -177,7 +177,7 @@ Writeln;
 {$ifdef OS2}
 
 Writeln('  Your disk number ',drive,' has the following partitions available for booting: ');
-exec('cmd.exe', '/C lvm.exe /query:all,' + Drive + ' > lvmtemp.tmp');
+exec('cmd.exe', '/C lvm.exe /query:all,' + chr(ord('1') + Drive) + ' > lvmtemp.tmp');
 assign(file1, 'lvmtemp.tmp');
 reset(file1);
 readln(file1, line1);  // not used

@@ -41,7 +41,9 @@ function isGPT(DriveNum: Byte): Boolean;
 implementation
 
 uses
+{$ifdef windows}
   Windows,
+{$endif}
   SysUtils,
   LVM;
 

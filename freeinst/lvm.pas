@@ -127,8 +127,8 @@ implementation
 var
   DrivesArray: TDrivesArray;
 
-{$ifdef OS2}
-{$else}
+{ $ifdef OS2 }
+{ $else }
 
 {$ifdef Windows}
 const
@@ -328,6 +328,6 @@ begin
 {$endif}
 	end;
 end;
-{$endif}
+{ $endif }
 
 end.
