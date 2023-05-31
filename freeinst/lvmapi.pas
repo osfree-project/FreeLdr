@@ -200,7 +200,7 @@ var
 {$endif}
 begin
 {$ifdef OS2}
-  Open_LVM_Engine(Ignore_CHS, &Res);
+  Open_LVM_Engine(Ignore_CHS, @Res);
   Result:=Res;
 {$endif}
 {$ifdef Windows}
@@ -298,7 +298,7 @@ var
 {$endif}
 begin
 {$ifdef OS2}
-  Commit_Changes(&Res);
+  Commit_Changes(@Res);
   Result:=Res;
 {$endif}
 {$ifdef Windows}
@@ -313,7 +313,7 @@ var
 {$endif}
 begin
 {$ifdef OS2}
-  Result:=Get_Drive_Control_Data(&Res);
+  Result:=Get_Drive_Control_Data(@Res);
 {$endif}
 {$ifdef Windows}
   result:=DrivesArray;
@@ -343,7 +343,7 @@ var
 {$endif}
 begin
 {$ifdef OS2}
-  Read_Sectors(Drive_Number, Starting_Sector, Sectors_To_Read, Buffer: ADDRESS, &Res);
+  Read_Sectors(Drive_Number, Starting_Sector, Sectors_To_Read, @Buffer, @Res);
   Result:=Res;
 {$endif}
 
@@ -371,7 +371,7 @@ var
 {$endif}
 begin
 {$ifdef OS2}
-	Write_Sectors(Drive_Number, Starting_Sector, Sectors_To_Write, Buffer, &Res);
+	Write_Sectors(Drive_Number, Starting_Sector, Sectors_To_Write, @Buffer, @Res);
 	Result:=Res;
 {$endif}
 
