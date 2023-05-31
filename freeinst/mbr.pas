@@ -41,11 +41,8 @@ function isGPT(DriveNum: Byte): Boolean;
 implementation
 
 uses
-{$ifdef windows}
-  Windows,
-{$endif}
   SysUtils,
-  LVM;
+  LVMAPI;
 
 const
   BIOSDISK_READ               = $0;

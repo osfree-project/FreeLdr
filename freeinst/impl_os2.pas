@@ -538,8 +538,4 @@ Else
 
 End;
 
-{$IFDEF FPC}
-{initialisation}
-begin
-{$ENDIF}
 end.

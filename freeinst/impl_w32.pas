@@ -31,7 +31,7 @@ procedure Restore_MBR_Sector;
 implementation
 
 uses
-  Common, Strings, SysUtils, Crt, Dos, LVM, MBR;
+  Common, Strings, SysUtils, Crt, Dos, LVMAPI, MBR;
 
 const
   BIOSDISK_READ               = $0;
@@ -241,8 +241,4 @@ Begin
   end;
 End;
 
-{$IFDEF FPC}
-{initialisation}
-begin
-{$ENDIF}
 end.

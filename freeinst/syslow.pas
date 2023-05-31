@@ -91,8 +91,4 @@ uses
   {$I Lnx.Pas}
 {$ENDIF}
 
-{$IFDEF FPC}
-{initialization}
-begin
-{$ENDIF}
 end.

@@ -262,8 +262,4 @@ Procedure Unlock_Disk(DevHandle: Hfile);
 Begin
 End;
 
-{$IFDEF FPC}
-{initialisation}
-begin
-{$ENDIF}
 end.

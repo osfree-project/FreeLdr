@@ -411,8 +411,4 @@ begin
   readln;
 end;
 
-{$IFDEF FPC}
-{initialisation}
-begin
-{$ENDIF}
 end.

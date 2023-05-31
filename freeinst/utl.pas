@@ -68,10 +68,6 @@ begin
       Drives := Drives + [chr(ord('A') + i)];
 end;
 
-{$IFDEF FPC}
-{initialization}
-begin
-{$ENDIF}
 end.
 
 

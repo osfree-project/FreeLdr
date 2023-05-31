@@ -99,8 +99,4 @@ var
 
 implementation
 
-{$IFDEF FPC}
-{initialisation}
-begin
-{$ENDIF}
 end.
