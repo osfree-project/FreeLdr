@@ -338,6 +338,7 @@ var
 	DataLen: LongWord;
 {$endif}
 {$ifdef OS2}
+var
 	Res: CARDINAL32;
 {$endif}
 begin
