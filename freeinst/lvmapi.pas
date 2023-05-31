@@ -2,7 +2,7 @@
 
      LVM support
 
-	 Copyright (C) 2022 osFree
+	 Copyright (C) 2022-2023 osFree
 
      All rights reserved.
 
@@ -315,12 +315,10 @@ var
 begin
 {$ifdef OS2}
   DCA:=Get_Drive_Control_Data(@Res);
-  SetLength(DCA.Count);
-  Result:=TDrivesArray(DCA.Drive_Control_Data);
+  SetLength(DrivesArray, DCA.Count);
+  DrivesArray=TDrivesArray(DCA.Drive_Control_Data);
 {$endif}
-{$ifdef Windows}
   result:=DrivesArray;
-{$endif}
 end;
 
 function LvmFreeEngineMemory(LVMObject: ADDRESS): CARDINAL32;
@@ -360,16 +358,18 @@ begin
 			break;
 		end;
 	end;
+	result:=LVM_ENGINE_NO_ERROR;
 {$endif}
 end;
 
 function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; var Buffer): CARDINAL32;
-var
 {$ifdef windows}
+var
 	i: integer;
 	DataLen: LongWord;
 {$endif}
 {$ifdef OS2}
+var
 	Res: CARDINAL32;
 {$endif}
 begin
@@ -388,6 +388,7 @@ begin
 			break;
 		end;
 	end;
+	result:=LVM_ENGINE_NO_ERROR;
 {$endif}
 end;
 
