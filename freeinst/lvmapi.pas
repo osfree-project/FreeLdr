@@ -99,7 +99,7 @@ const
 
 type
   LBA=LongWord;
-  Cardinal32=Longword;
+  Cardinal32=Cardinal;
   ADDRESS=Pointer;
 
 // @todo check real packing!!!
