@@ -201,7 +201,7 @@ var
 begin
 {$ifdef OS2}
   Open_LVM_Engine(Ignore_CHS, &Res);
-  Return:=Res;
+  Result:=Res;
 {$endif}
 {$ifdef Windows}
 	  for Drive:=0 to 15 do
