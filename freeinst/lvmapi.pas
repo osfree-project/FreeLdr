@@ -310,10 +310,13 @@ function LvmGetDriveControlData: TDrivesArray;
 {$ifdef OS2}
 var
   Res: CARDINAL32;
+  DCA: Drive_Control_Array;
 {$endif}
 begin
 {$ifdef OS2}
-  Result:=Get_Drive_Control_Data(@Res);
+  DCA:=Get_Drive_Control_Data(@Res);
+  SetLength(DCA.Count);
+  Result:=TDrivesArray(DCA.Drive_Control_Data);
 {$endif}
 {$ifdef Windows}
   result:=DrivesArray;
