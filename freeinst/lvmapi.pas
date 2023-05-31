@@ -195,6 +195,7 @@ var
   PCh: PChar;  
 {$endif}
 {$ifdef OS2}
+var
   Res: CARDINAL32;
 {$endif}
 begin
