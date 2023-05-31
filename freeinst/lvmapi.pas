@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 }
 
-unit LVM;
+unit LVMApi;
 
 {This is LVM support/emulation library. Under OS/2 it uses real LVM.DLL, but
 under Win32/Linux/DOS it emulates required functions.}
@@ -41,6 +41,9 @@ interface
 uses
 {$ifdef Windows}
   Windows,
+{$endif}
+{$ifdef OS2}
+  LVM,
 {$endif}
   StrUtils, SysUtils;
   
@@ -127,9 +130,6 @@ implementation
 var
   DrivesArray: TDrivesArray;
 
-{ $ifdef OS2 }
-{ $else }
-
 {$ifdef Windows}
 const
   IOCTL_STORAGE_QUERY_PROPERTY = $2D1400;
@@ -194,7 +194,14 @@ var
   DeviceDescriptor: STORAGE_DEVICE_DESCRIPTOR;
   PCh: PChar;  
 {$endif}
+{$ifdef OS2}
+  Res: CARDINAL32;
+{$endif}
 begin
+{$ifdef OS2}
+  Open_LVM_Engine(Ignore_CHS, &Res);
+  Return:=Res;
+{$endif}
 {$ifdef Windows}
 	  for Drive:=0 to 15 do
 	  begin
@@ -267,67 +274,116 @@ begin
 end;
 
 procedure LvmCloseEngine();
+{$ifdef windows}
 var
 	i: integer;
+{$endif}
 begin
+{$ifdef OS2}
+  Close_LVM_Engine;
+{$endif}
+{$ifdef windows}
 	for i:=Low(DrivesArray) to High(DrivesArray) do
 	begin
-{$ifdef windows}
 		CloseHandle(HANDLE(DrivesArray[i].DriveHandle));
-{$endif}
 	end;
+{$endif}
 end;
 
 function LvmCommitChanges(): CARDINAL32;
+{$ifdef OS2}
+var
+  Res: CARDINAL32;
+{$endif}
 begin
+{$ifdef OS2}
+  Commit_Changes(&Res);
+  Result:=Res;
+{$endif}
+{$ifdef Windows}
   result:=LVM_ENGINE_NO_ERROR;
+{$endif}
 end;
 
 function LvmGetDriveControlData: TDrivesArray;
+{$ifdef OS2}
+var
+  Res: CARDINAL32;
+{$endif}
 begin
+{$ifdef OS2}
+  Result:=Get_Drive_Control_Data(&Res);
+{$endif}
+{$ifdef Windows}
   result:=DrivesArray;
+{$endif}
 end;
 
 function LvmFreeEngineMemory(LVMObject: ADDRESS): CARDINAL32;
 begin
+{$ifdef OS2}
+  Free_Engine_Memory(LVMObject);
   result:=LVM_ENGINE_NO_ERROR;
+{$endif}
+{$ifdef Windows}
+  result:=LVM_ENGINE_NO_ERROR;
+{$endif}
 end;
 
 function LvmReadSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Read: CARDINAL32; var Buffer): CARDINAL32;
+{$ifdef windows}
 var
 	i: integer;
 	DataLen: LongWord;
+{$endif}
+{$ifdef OS2}
+	Res: CARDINAL32;
+{$endif}
 begin
+{$ifdef OS2}
+  Read_Sectors(Drive_Number, Starting_Sector, Sectors_To_Read, Buffer: ADDRESS, &Res);
+  Result:=Res;
+{$endif}
+
+{$ifdef windows}
 	for i:=Low(DrivesArray) to High(DrivesArray) do
 	begin
-{$ifdef windows}
 		if DrivesArray[i].DriveNumber=Drive_Number then
 		begin
 			SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
 			if ReadFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Read*512, DataLen, nil)=false then writeln('error');
 			break;
 		end;
-{$endif}
 	end;
+{$endif}
 end;
 
 function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; var Buffer): CARDINAL32;
 var
+{$ifdef windows}
 	i: integer;
 	DataLen: LongWord;
+{$endif}
+{$ifdef OS2}
+	Res: CARDINAL32;
+{$endif}
 begin
+{$ifdef OS2}
+	Write_Sectors(Drive_Number, Starting_Sector, Sectors_To_Write, Buffer, &Res);
+	Result:=Res;
+{$endif}
+
+{$ifdef windows}
 	for i:=Low(DrivesArray) to High(DrivesArray) do
 	begin
-{$ifdef windows}
 		if DrivesArray[i].DriveNumber=Drive_Number then
 		begin
 			SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
 			WriteFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Write*512, DataLen, nil);
 			break;
 		end;
-{$endif}
 	end;
+{$endif}
 end;
-{ $endif }
 
 end.

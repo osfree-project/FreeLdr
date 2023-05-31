@@ -65,7 +65,7 @@ Uses
 {$ENDIF}
               Strings, SysUtils, StrUtils, Crt, Dos,
               tpcrt, tpwindow, colordef, tpmenu, // Turbo Professional
-			  lvm, // OS/2 Logical Volume Manager
+			  lvmapi, // OS/2 Logical Volume Manager
 mbr; //MBR
 
 {$IFDEF FPC}
@@ -1006,6 +1006,25 @@ Begin
   ClrScr;
 end;
 
+procedure Install_LDR;
+Begin
+  Case DriveT Of
+    dtFloppy    : Install_Fat;
+    dtHDFAT     : Install_Fat;
+    dtHDFAT32   : Install_Fat32;
+    dtHDHPFS    : Install_HPFS;
+    dtHDJFS     : Install_JFS;
+  //           dtHDNTFS  : Install_;  No Writeble IFS exists for OS/2
+  //           dtHDExt2  : Install_;  Wonder if it will work on OS/2 ???
+    Else Begin
+      Writeln('We do not yet support support the filesystem on your ',drive1,' partition');
+      Writeln('Press <Enter> to continue');
+      Readln;
+    End;
+  End;
+End;
+
+
 var
   OldExitProc: Pointer;
 
@@ -1015,11 +1034,11 @@ begin
   ExitProc:=OldExitProc; { reset the old exitproc }
 end;
 
+
 { ***********************************************************************************************************
   ********************************************       MAIN      **********************************************
   *********************************************************************************************************** }
 
-// SetVideoMode(80,40);
 const
   Colors : MenuColorArray =
   ($88+WhiteOnBlue,                      {FrameColor}
@@ -1056,13 +1075,13 @@ Begin
 
   Drive := Drive2;
 {
-If ParamCount > 0 Then
-  Drive1 := ParamStr(1)  // Driveletter expected as first parameter on cmd line.
- Else
-  Drive1 := copy(ParamStr(0),1,2);  // Get driveletter where this app is started from.
-Drive := StrPCopy(Drive,drive1);
+  If ParamCount > 0 Then
+    Drive1 := ParamStr(1)  // Driveletter expected as first parameter on cmd line.
+  Else
+    Drive1 := copy(ParamStr(0),1,2);  // Get driveletter where this app is started from.
+  Drive := StrPCopy(Drive,drive1);
 
-DriveT := GetDriveType(drive1[1]);
+  DriveT := GetDriveType(drive1[1]);
 }
   InitDesktop;
   ShowWarning;
@@ -1086,7 +1105,7 @@ DriveT := GetDriveType(drive1[1]);
     MenuItem(' 4: Backup a BootBlock', 4, 2, Ord(MBackUpBootBlock), 'Make back up copy of Master Boot Record from selected partition');
     MenuItem(' 5: Restore MBR sector from backup file', 5, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
     MenuItem(' 6: Restore a BootBlock from backup file', 6, 2, Ord(MRestoreBootBlock), 'Restore a BootBlock from backup file');
-    MenuItem(' 9: Change partition to install, backup or restore to', 7, 2, Ord(MChangePartition), 'Change partition to install, backup or restore to');
+    MenuItem(' 9: Change partition', 7, 2, Ord(MChangePartition), 'Change partition to install, backup or restore to');
     MenuItem(' 0: Exit', 8, 2, Ord(MExit), 'Exit FreeLDR installer');
     ResetMenu(YN);
     MK:=MenuChoice(YN, SelectKey);
@@ -1094,23 +1113,7 @@ DriveT := GetDriveType(drive1[1]);
     
     case MK of
       Ord(MInstallMBR): Install_MBR;
-      Ord(MInstallFreeLdr): Begin
-           Case DriveT Of
-             dtFloppy    : Install_Fat;
-             dtHDFAT     : Install_Fat;
-             dtHDFAT32   : Install_Fat32;
-             dtHDHPFS    : Install_HPFS;
-             dtHDJFS     : Install_JFS;
-  //           dtHDNTFS  : Install_;  No Writeble IFS exists for OS/2
-  //           dtHDExt2  : Install_;  Wonder if it will work on OS/2 ???
-             Else Begin
-                  Writeln('We do not yet support support the filesystem on your ',drive1,' partition');
-                  Writeln('Press <Enter> to continue');
-                  Readln;
-                  End;
-             End;
-           End;
-  
+      Ord(MInstallFreeLdr): Install_LDR;
       Ord(MBackUpMBR): Backup_MBR_sector;
       Ord(MBackUpBootBlock): BackUp_BootBlock;
       Ord(MRestoreMBR): Restore_MBR_Sector;
