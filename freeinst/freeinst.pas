@@ -65,7 +65,7 @@ Uses
 {$ENDIF}
               Strings, SysUtils, StrUtils, Crt, Dos,
               tpcrt, tpwindow, colordef, tpmenu, // Turbo Professional
-			  lvmapi, // OS/2 Logical Volume Manager
+                          lvmapi, // OS/2 Logical Volume Manager
 mbr; //MBR
 
 {$IFDEF FPC}
@@ -85,6 +85,100 @@ Var
   ifsbuf:       Array[0..1000000] of Char;
 
 {******************************************************************************************}
+
+procedure ShowOK;
+const
+  Colors : MenuColorArray =
+  ($17,                      {FrameColor}
+    $4E,                     {HeaderColor}
+    WhiteOnBlue,              {BodyColor}
+    RedOnLtGray,             {SelectColor}
+    YellowOnBlue,             {HiliteColor}
+    BlackOnLtGray,           {HelpColor}
+    $17,                     {DisabledColor}
+    $03                      {ShadowColor}
+    );
+
+type
+  MakeCommands =             {codes returned by each menu selection}
+  (Mnone,                    {no command}
+   Mok);
+var
+  W: WindowPtr;
+  YN: Menu;
+  SelectKey: Char;
+Begin
+  Window(1,1,80,25);
+  MakeWindow(W, 17, 8, 63, 14, True, True, True, YellowOnRed, WhiteOnBlue, YellowOnBlue, ' Information ');
+  DisplayWindow(W);
+  Writeln;
+  Writeln(' Choose OK to continue ');
+
+  YN:=NewMenu([], nil);
+  SubMenu(20, 4, 0, Vertical, LotusFrame, Colors, '');
+  MenuItem(' OK ', 1, 2, Ord(Mok), '');
+  ResetMenu(YN);
+  MenuChoice(YN, SelectKey);
+
+  DisposeWindow(W);
+
+  // @todo temporary solution until implement KillWindow or EraseTopWindow
+  Window(2,5,80,25);
+  TextBackground(Blue);
+  TextColor(Cyan);
+  ClrScr;
+end;
+
+procedure ShowWarning;
+const
+  Colors : MenuColorArray =
+  ($17,                      {FrameColor}
+    $4E,                     {HeaderColor}
+    WhiteOnRed,              {BodyColor}
+    RedOnLtGray,             {SelectColor}
+    YellowOnRed,             {HiliteColor}
+    BlackOnLtGray,           {HelpColor}
+    $17,                     {DisabledColor}
+    $03                      {ShadowColor}
+    );
+
+type
+  MakeCommands =             {codes returned by each menu selection}
+  (Mnone,                    {no command}
+   Myes,                    {main menu root}
+   Mno);              {select item to edit}
+var
+  W: WindowPtr;
+  YN: Menu;
+  SelectKey: Char;
+Begin
+  MakeWindow(W, 17, 5, 63, 19, True, True, True, YellowOnRed, WhiteOnRed, YellowOnRed, ' WARNING! ');
+  DisplayWindow(W);
+  Writeln;
+  Writeln(' This is experimental software that');
+  Writeln(' can *COMPLETELY* destroy your harddisk(s).');
+  Writeln;
+  Writeln(' Don''t use this software, unless you have');
+  WriteLn(' a full system backup of all your HDs');
+  WriteLn;
+  WriteLn(' Are you sure, you want to continue?');
+
+  YN:=NewMenu([], nil);
+  SubMenu(20, 10, 0, Vertical, LotusFrame, Colors, '');
+  MenuItem(' Yes ', 1, 2, Ord(Myes), '');
+  MenuItem(' No ', 2, 2, Ord(Mno), '');
+  ResetMenu(YN);
+  if MenuChoice(YN, SelectKey)=ord(Mno) then Halt(9);;
+
+  DisposeWindow(W);
+
+  // @todo temporary solution until implement KillWindow or EraseTopWindow
+  Window(2,5,80,25);
+  TextBackground(Blue);
+  TextColor(Cyan);
+  ClrScr;
+end;
+
 
 // Rewrite start of preldr0 file acording to filesystem needs
 Procedure Fix_Preldr0(DriveT:TdriveType);
@@ -724,13 +818,12 @@ Procedure Backup_BootBlock;
 var
   wDevHandle:     LongInt;
 Begin
-FillChar(Bbuf,SizeOf(Bbuf),0);
-Open_Disk(Drive,wDevHandle);
-DevHandle:= wDevHandle;
-Read_Disk(DevHandle,Bbuf,BblockLen);
-Writeln('Press Enter to continue...');
-Readln;
-Close_Disk(DevHandle);
+  FillChar(Bbuf,SizeOf(Bbuf),0);
+  Open_Disk(Drive,wDevHandle);
+  DevHandle:= wDevHandle;
+  Read_Disk(DevHandle,Bbuf,BblockLen);
+  ShowOK;
+  Close_Disk(DevHandle);
 End;
 
 Procedure Restore_BootBlock;
@@ -780,8 +873,7 @@ If FH > 0 Then
   Unlock_Disk(devhandle);
   Close_Disk(DevHandle);
   End;
-Writeln('Press Enter to continue...');
-Readln;
+  ShowOK;
 End;
 
 Procedure InitDesktop;
@@ -852,7 +944,7 @@ Begin
         dtInvalid   : Desc := 'Invalid or unknown drive type';
       end;
       MenuItem(Drive3+': '+Desc, Pstn, 1, Ord(Drive3), '');
-	  Inc(Pstn);
+          Inc(Pstn);
     end;
 
   ResetMenu(YN);
@@ -950,61 +1042,16 @@ end;
 
 // Backup MBR sector to a file
 Procedure Backup_MBR_sector;
+var
+  F: integer;
 begin
   ReadMBRSector(SelectDisk,sector0);
-  Writeln('Press Enter to continue...');
-  Readln;
+  F:=FileCreate('MBR.BIN');
+  FileWrite(F, sector0, SizeOf(sector0));
+  FileClose(F);
+  ShowOK;
 End;
 
-procedure ShowWarning;
-const
-  Colors : MenuColorArray =
-  ($17,                      {FrameColor}
-    $4E,                     {HeaderColor}
-    WhiteOnRed,              {BodyColor}
-    RedOnLtGray,             {SelectColor}
-    YellowOnRed,             {HiliteColor}
-    BlackOnLtGray,           {HelpColor}
-    $17,                     {DisabledColor}
-    $03                      {ShadowColor}
-    );
-
-type
-  MakeCommands =             {codes returned by each menu selection}
-  (Mnone,                    {no command}
-   Myes,                    {main menu root}
-   Mno);              {select item to edit}
-var
-  W: WindowPtr;
-  YN: Menu;
-  SelectKey: Char;
-Begin
-  MakeWindow(W, 17, 5, 63, 19, True, True, True, YellowOnRed, WhiteOnRed, YellowOnRed, ' WARNING! ');
-  DisplayWindow(W);
-  Writeln;
-  Writeln(' This is experimental software that');
-  Writeln(' can *COMPLETELY* destroy your harddisk(s).');
-  Writeln; 
-  Writeln(' Don''t use this software, unless you have');
-  WriteLn(' a full system backup of all your HDs');
-  WriteLn;
-  WriteLn(' Are you sure, you want to continue?');
-
-  YN:=NewMenu([], nil);
-  SubMenu(20, 10, 0, Vertical, LotusFrame, Colors, '');
-  MenuItem(' Yes ', 1, 2, Ord(Myes), '');
-  MenuItem(' No ', 2, 2, Ord(Mno), '');
-  ResetMenu(YN);
-  if MenuChoice(YN, SelectKey)=ord(Mno) then Halt(9);;
-
-  DisposeWindow(W);
-
-  // @todo temporary solution until implement KillWindow or EraseTopWindow
-  Window(2,5,80,25);
-  TextBackground(Blue);
-  TextColor(Cyan);
-  ClrScr;
-end;
 
 procedure Install_LDR;
 Begin
@@ -1085,7 +1132,7 @@ Begin
 }
   InitDesktop;
   ShowWarning;
-  LvmOpenEngine(False);
+  writeln(LvmOpenEngine(False));
 
   OldExitProc   := ExitProc;
   ExitProc      := @MyExitProc;
@@ -1110,7 +1157,7 @@ Begin
     ResetMenu(YN);
     MK:=MenuChoice(YN, SelectKey);
     ClrScr;
-    
+
     case MK of
       Ord(MInstallMBR): Install_MBR;
       Ord(MInstallFreeLdr): Install_LDR;

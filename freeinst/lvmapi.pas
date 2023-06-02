@@ -2,7 +2,7 @@
 
      LVM support
 
-	 Copyright (C) 2022-2023 osFree
+         Copyright (C) 2022-2023 osFree
 
      All rights reserved.
 
@@ -46,7 +46,7 @@ uses
   LVM,
 {$endif}
   StrUtils, SysUtils;
-  
+
 const
   LVM_ENGINE_NO_ERROR                          = 0;
   LVM_ENGINE_OUT_OF_MEMORY                     = 1;
@@ -116,7 +116,7 @@ type
   end;
 
   TDrivesArray=Array of TDriveControl;
-  
+
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
 procedure LvmCloseEngine();
 function LvmCommitChanges(): CARDINAL32;
@@ -133,8 +133,8 @@ var
 {$ifdef Windows}
 const
   IOCTL_STORAGE_QUERY_PROPERTY = $2D1400;
-  
-type 
+
+type
 STORAGE_PROPERTY_QUERY = packed record
   PropertyId: DWORD;
   QueryType: DWORD;
@@ -186,13 +186,13 @@ var
   s: AnsiString;
   Drive: Integer;
   buffer: DISK_GEOMETRY_EX;
-  
+
   /////////
   Returned: Cardinal;
   Status: LongBool;
   PropQuery: STORAGE_PROPERTY_QUERY;
   DeviceDescriptor: STORAGE_DEVICE_DESCRIPTOR;
-  PCh: PChar;  
+  PCh: PChar;
 {$endif}
 {$ifdef OS2}
 var
@@ -204,71 +204,71 @@ begin
   Result:=Res;
 {$endif}
 {$ifdef Windows}
-	  for Drive:=0 to 15 do
-	  begin
-	// create a handle to the device
-	s := '\\.\PhysicalDrive' + IntToStr(Drive);
-	hdl:=CreateFileA(PChar(s),
-					GENERIC_READ or GENERIC_WRITE,
-					FILE_SHARE_READ or FILE_SHARE_WRITE,
-					nil,
-					OPEN_EXISTING,
-					0,
-					0);
+          for Drive:=0 to 15 do
+          begin
+        // create a handle to the device
+        s := '\\.\PhysicalDrive' + IntToStr(Drive);
+        hdl:=CreateFileA(PChar(s),
+                                        GENERIC_READ or GENERIC_WRITE,
+                                        FILE_SHARE_READ or FILE_SHARE_WRITE,
+                                        nil,
+                                        OPEN_EXISTING,
+                                        0,
+                                        0);
 
 
-	if hdl <> INVALID_HANDLE_VALUE then 
-	begin
-		SetLength(DrivesArray, Length(DrivesArray)+1);
-		with DrivesArray[Length(DrivesArray)-1] do
-		begin
-		DriveHandle:=ADDRESS(hdl);
-		DriveNumber:=Drive+1; // @todo DriveNumber is 1 based in LVM?
+        if hdl <> INVALID_HANDLE_VALUE then
+        begin
+                SetLength(DrivesArray, Length(DrivesArray)+1);
+                with DrivesArray[Length(DrivesArray)-1] do
+                begin
+                DriveHandle:=ADDRESS(hdl);
+                DriveNumber:=Drive+1; // @todo DriveNumber is 1 based in LVM?
 
-		ZeroMemory(@PropQuery, SizeOf(PropQuery));
-		ZeroMemory(@DeviceDescriptor, SizeOf(DeviceDescriptor));
+                ZeroMemory(@PropQuery, SizeOf(PropQuery));
+                ZeroMemory(@DeviceDescriptor, SizeOf(DeviceDescriptor));
 
-		DeviceDescriptor.Size := SizeOf(DeviceDescriptor);
+                DeviceDescriptor.Size := SizeOf(DeviceDescriptor);
 
-		Status := DeviceIoControl(
-					hdl,
-					IOCTL_STORAGE_QUERY_PROPERTY,
-					@PropQuery,
-					SizeOf(PropQuery),
-					@DeviceDescriptor,
-					DeviceDescriptor.Size,
-					Returned,
-					nil
-				);
+                Status := DeviceIoControl(
+                                        hdl,
+                                        IOCTL_STORAGE_QUERY_PROPERTY,
+                                        @PropQuery,
+                                        SizeOf(PropQuery),
+                                        @DeviceDescriptor,
+                                        DeviceDescriptor.Size,
+                                        Returned,
+                                        nil
+                                );
 
-		if not Status then RaiseLastOSError;
+                if not Status then RaiseLastOSError;
 
-		if DeviceDescriptor.SerialNumberOffset <> 0 then
-		begin
-			PCh := @PCharArray(@DeviceDescriptor)^[DeviceDescriptor.SerialNumberOffset];
-			DriveSerialNumber:=HexToBin(PCh, PChar(@Result), SizeOf(Cardinal));
-		end;
-		DriveIsPRM:=DeviceDescriptor.RemovableMedia;
+                if DeviceDescriptor.SerialNumberOffset <> 0 then
+                begin
+                        PCh := @PCharArray(@DeviceDescriptor)^[DeviceDescriptor.SerialNumberOffset];
+                        DriveSerialNumber:=HexToBin(PCh, PChar(@Result), SizeOf(Cardinal));
+                end;
+                DriveIsPRM:=DeviceDescriptor.RemovableMedia;
 
-		Status := DeviceIoControl(hdl,
-						IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-						nil,
-						0,
-						@buffer,
-						sizeof(buffer),
-						returned,
-						nil);
+                Status := DeviceIoControl(hdl,
+                                                IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
+                                                nil,
+                                                0,
+                                                @buffer,
+                                                sizeof(buffer),
+                                                returned,
+                                                nil);
 
-		if not Status then RaiseLastOSError;
+                if not Status then RaiseLastOSError;
 
-		//DriveSize:=buffer.disksize/buffer.geometry.BytesPerSector;
-		SectorsPerTrack:=buffer.geometry.SectorsPerTrack;
-		CylinderCount:=buffer.geometry.cylinders;
-		HeadsPerCylinder:=buffer.geometry.TracksPerCylinder;
+                //DriveSize:=buffer.disksize/buffer.geometry.BytesPerSector;
+                SectorsPerTrack:=buffer.geometry.SectorsPerTrack;
+                CylinderCount:=buffer.geometry.cylinders;
+                HeadsPerCylinder:=buffer.geometry.TracksPerCylinder;
 
-		end;
-	end;
-	
+                end;
+        end;
+
   end;
 {$endif}
   result:=LVM_ENGINE_NO_ERROR;
@@ -277,17 +277,17 @@ end;
 procedure LvmCloseEngine();
 {$ifdef windows}
 var
-	i: integer;
+        i: integer;
 {$endif}
 begin
 {$ifdef OS2}
   Close_LVM_Engine;
 {$endif}
 {$ifdef windows}
-	for i:=Low(DrivesArray) to High(DrivesArray) do
-	begin
-		CloseHandle(HANDLE(DrivesArray[i].DriveHandle));
-	end;
+        for i:=Low(DrivesArray) to High(DrivesArray) do
+        begin
+                CloseHandle(HANDLE(DrivesArray[i].DriveHandle));
+        end;
 {$endif}
 end;
 
@@ -311,12 +311,16 @@ function LvmGetDriveControlData: TDrivesArray;
 var
   Res: CARDINAL32;
   DCA: Drive_Control_Array;
+  i: integer;
 {$endif}
 begin
 {$ifdef OS2}
   DCA:=Get_Drive_Control_Data(@Res);
   SetLength(DrivesArray, DCA.Count);
-  DrivesArray=TDrivesArray(DCA.Drive_Control_Data);
+  For i:=Low(DrivesArray) to High(DrivesArray) do
+  begin
+    DrivesArray[i]:=TDriveControl(DCA.Drive_Control_Data[i]);
+  end;
 {$endif}
   result:=DrivesArray;
 end;
@@ -335,12 +339,12 @@ end;
 function LvmReadSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Read: CARDINAL32; var Buffer): CARDINAL32;
 {$ifdef windows}
 var
-	i: integer;
-	DataLen: LongWord;
+        i: integer;
+        DataLen: LongWord;
 {$endif}
 {$ifdef OS2}
 var
-	Res: CARDINAL32;
+        Res: CARDINAL32;
 {$endif}
 begin
 {$ifdef OS2}
@@ -349,46 +353,46 @@ begin
 {$endif}
 
 {$ifdef windows}
-	for i:=Low(DrivesArray) to High(DrivesArray) do
-	begin
-		if DrivesArray[i].DriveNumber=Drive_Number then
-		begin
-			SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
-			if ReadFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Read*512, DataLen, nil)=false then writeln('error');
-			break;
-		end;
-	end;
-	result:=LVM_ENGINE_NO_ERROR;
+        for i:=Low(DrivesArray) to High(DrivesArray) do
+        begin
+                if DrivesArray[i].DriveNumber=Drive_Number then
+                begin
+                        SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
+                        if ReadFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Read*512, DataLen, nil)=false then writeln('error');
+                        break;
+                end;
+        end;
+        result:=LVM_ENGINE_NO_ERROR;
 {$endif}
 end;
 
 function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; var Buffer): CARDINAL32;
 {$ifdef windows}
 var
-	i: integer;
-	DataLen: LongWord;
+        i: integer;
+        DataLen: LongWord;
 {$endif}
 {$ifdef OS2}
 var
-	Res: CARDINAL32;
+        Res: CARDINAL32;
 {$endif}
 begin
 {$ifdef OS2}
-	Write_Sectors(Drive_Number, Starting_Sector, Sectors_To_Write, @Buffer, @Res);
-	Result:=Res;
+        Write_Sectors(Drive_Number, Starting_Sector, Sectors_To_Write, @Buffer, @Res);
+        Result:=Res;
 {$endif}
 
 {$ifdef windows}
-	for i:=Low(DrivesArray) to High(DrivesArray) do
-	begin
-		if DrivesArray[i].DriveNumber=Drive_Number then
-		begin
-			SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
-			WriteFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Write*512, DataLen, nil);
-			break;
-		end;
-	end;
-	result:=LVM_ENGINE_NO_ERROR;
+        for i:=Low(DrivesArray) to High(DrivesArray) do
+        begin
+                if DrivesArray[i].DriveNumber=Drive_Number then
+                begin
+                        SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
+                        WriteFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Write*512, DataLen, nil);
+                        break;
+                end;
+        end;
+        result:=LVM_ENGINE_NO_ERROR;
 {$endif}
 end;
 
