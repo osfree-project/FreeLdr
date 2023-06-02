@@ -92,7 +92,7 @@ const
   ($17,                      {FrameColor}
     $4E,                     {HeaderColor}
     WhiteOnBlue,              {BodyColor}
-    RedOnLtGray,             {SelectColor}
+    BlueOnLtGray,             {SelectColor}
     YellowOnBlue,             {HiliteColor}
     BlackOnLtGray,           {HelpColor}
     $17,                     {DisabledColor}
@@ -109,7 +109,7 @@ var
   SelectKey: Char;
 Begin
   Window(1,1,80,25);
-  MakeWindow(W, 17, 8, 63, 14, True, True, True, YellowOnRed, WhiteOnBlue, YellowOnBlue, ' Information ');
+  MakeWindow(W, 17, 8, 63, 14, True, True, True, YellowOnBlue, WhiteOnBlue, YellowOnBlue, ' Information ');
   DisplayWindow(W);
   Writeln;
   Writeln(' Choose OK to continue ');
