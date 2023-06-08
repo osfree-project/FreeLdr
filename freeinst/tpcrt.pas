@@ -87,10 +87,25 @@ function ScreenX: Byte;
 function ScreenY: Byte;
   {-Return absolute row coordinate of cursor}
 
+{Forwarders to CRT}
+var
+  TextAttr: byte absolute Crt.TextAttr;
+  WindMin: Word absolute Crt.WindMin;
+  WindMax: Word absolute Crt.WindMax;
+  ScreenWidth: Longint absolute Crt.ScreenWidth;
+  ScreenHeight: Longint absolute Crt.ScreenHeight;
+
 procedure ClrScr;
 procedure TextBackground(C: byte);
 procedure TextColor(C: byte);
 procedure Window(X1, Y1, X2, Y2: byte);
+procedure GoToXY(X, Y: byte);
+function WhereX: byte;
+function WhereY: byte;
+procedure ClrEOL;
+function ReadKey: Char;
+procedure Delay(MS: Word);
+procedure HighVideo;
 
 implementation
 
@@ -189,6 +204,41 @@ end;
 procedure Window(X1, Y1, X2, Y2: byte);
 begin
   Crt.Window(X1, Y1, X2, Y2);
+end;
+
+procedure GoToXY(X, Y: byte);
+begin
+  Crt.GoToXY(X, Y);
+end;
+
+function WhereX: byte;
+begin
+  Result:=Crt.WhereX;
+end;
+
+function WhereY: byte;
+begin
+  Result:=Crt.WhereY;
+end;
+
+procedure ClrEOL;
+begin
+  Crt.ClrEOL;
+end;
+
+function ReadKey: Char;
+begin
+  Result:=Crt.ReadKey;
+end;
+
+procedure Delay(MS: Word);
+begin
+  Crt.Delay(MS);
+end;
+
+procedure HighVideo;
+begin
+  Crt.HighVideo;
 end;
 
 end.

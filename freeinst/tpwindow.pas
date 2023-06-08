@@ -34,7 +34,6 @@ Unit tpwindow;
 interface
 
 uses
-  crt,
   tpcrt;
 
 type

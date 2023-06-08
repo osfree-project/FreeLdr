@@ -63,7 +63,7 @@ Uses
 {$IFDEF LINUX}
               Impl_LNX,
 {$ENDIF}
-              Strings, SysUtils, StrUtils, Crt, Dos,
+              Strings, SysUtils, StrUtils, Dos,
               tpcrt, tpwindow, colordef, tpmenu, // Turbo Professional
               lvmapi, // OS/2 Logical Volume Manager
               mbr, // MBR

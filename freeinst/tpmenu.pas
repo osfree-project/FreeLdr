@@ -36,7 +36,6 @@ unit tpmenu;
 interface
 
 uses
-  crt,
   tpcrt,
   tpwindow;
 
