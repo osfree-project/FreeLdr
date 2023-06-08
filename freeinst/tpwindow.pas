@@ -148,8 +148,8 @@ begin
   with State do begin
 //    CS:=CursorStartLine;
 //    CE:=CursorEndLine;
-//    CX:=WhereXAbs;
-//    CY:=WhereYAbs;
+    CX:=WhereXAbs;
+    CY:=WhereYAbs;
     Attr:=TextAttr;
     WMin:=WindMin;
     WMax:=WindMax;

@@ -24,7 +24,7 @@
 }
 Unit LVM;
 
-{$PACKRECORDS C}
+{$PACKRECORDS 1}
 
 Interface
 

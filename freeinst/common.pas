@@ -12,7 +12,7 @@ Type
   Possible_IFS = dtHDFAT..dtHDJFS ;
 
 Const
-  version       = 'osFree installer by osFree Project 2010';
+  version       = 'FreeLDR installer';
   osFree: Str8  = '[osFree]' ;
   Sector0Len    = 512;
   BblockLen     = 8192;

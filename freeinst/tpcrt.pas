@@ -72,6 +72,26 @@ procedure FrameWindow(LeftCol, TopRow, RightCol, BotRow, FAttr, HAttr : Byte;
                       Header : string);
   {-Draws a frame around a window}
 
+function WhereXAbs: Byte;
+  {-Return absolute column coordinate of cursor}
+
+function WhereYAbs: Byte;
+  {-Return absolute row coordinate of cursor}
+
+function WhereXY: Word;
+  {-Return absolute coordinates of cursor}
+
+function ScreenX: Byte;
+  {-Return absolute column coordinate of cursor}
+
+function ScreenY: Byte;
+  {-Return absolute row coordinate of cursor}
+
+procedure ClrScr;
+procedure TextBackground(C: byte);
+procedure TextColor(C: byte);
+procedure Window(X1, Y1, X2, Y2: byte);
+
 implementation
 
 procedure FrameWindow(LeftCol, TopRow, RightCol, BotRow, FAttr, HAttr : Byte;
@@ -80,10 +100,17 @@ procedure FrameWindow(LeftCol, TopRow, RightCol, BotRow, FAttr, HAttr : Byte;
 var
   i: byte;
   oldTextAttr: Byte;
+  OldWindMin, OldWindMax: Word;
+  OldX, OldY: Byte;
 begin
   CursorOff;
   OldTextAttr:=TextAttr;
+  OldWindMin:=WindMin;
+  OldWindMax:=WindMax;
+  OldX:=WhereX;
+  OldY:=WhereY;
   TextAttr:=FAttr;
+  Window(1, 1, ScreenWidth, ScreenHeight);
   GoToXY(LeftCol, TopRow);
   write(FrameChars[ULeft]);
   for i:=LeftCol+1 to RightCol-1 do write(FrameChars[Horiz]);
@@ -102,7 +129,7 @@ begin
   for i:=LeftCol+1 to RightCol-1 do write(FrameChars[Horiz]);
   write(FrameChars[LRight]);
 
-  if Header<>'' then 
+  if Header<>'' then
   begin
     TextAttr:=HAttr;
     GoToXY(LeftCol+(RightCol-LeftCol) div 2-Length(Header) div 2, TopRow);
@@ -110,6 +137,58 @@ begin
   end;
 
   TextAttr:=OldTextAttr;
+  Window(Lo(OldWindMin)+1, Hi(OldWindMin)+1, Lo(OldWindMax)+1, Hi(OldWindMax)+1);
+  GoToXY(OldX, OldY);
+end;
+
+function WhereXAbs: Byte;
+  {-Return absolute column coordinate of cursor}
+begin
+  Result:=WhereX+Lo(WindMin);
+end;
+
+function WhereYAbs: Byte;
+  {-Return absolute row coordinate of cursor}
+begin
+  Result:=WhereY+Hi(WindMin);
+end;
+
+function ScreenX: Byte;
+  {-Return absolute column coordinate of cursor}
+begin
+  Result:=WhereX+Lo(WindMin);
+end;
+
+function ScreenY: Byte;
+  {-Return absolute row coordinate of cursor}
+begin
+  Result:=WhereY+Hi(WindMin);
+end;
+
+function WhereXY: Word;
+  {-Return absolute coordinates of cursor}
+begin
+  Result:=$ff*(WhereY)+(WhereX)+WindMin;
+end;
+
+procedure ClrScr;
+begin
+  Crt.ClrScr;
+end;
+
+procedure TextBackground(C: byte);
+begin
+  Crt.TextBackground(C);
+end;
+
+procedure TextColor(C: byte);
+begin
+  Crt.TextColor(C);
+end;
+
+procedure Window(X1, Y1, X2, Y2: byte);
+begin
+  Crt.Window(X1, Y1, X2, Y2);
 end;
 
 end.

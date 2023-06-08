@@ -65,8 +65,9 @@ Uses
 {$ENDIF}
               Strings, SysUtils, StrUtils, Crt, Dos,
               tpcrt, tpwindow, colordef, tpmenu, // Turbo Professional
-                          lvmapi, // OS/2 Logical Volume Manager
-mbr; //MBR
+              lvmapi, // OS/2 Logical Volume Manager
+              mbr, // MBR
+              FreeMBR; // FreeMBR
 
 {$IFDEF FPC}
 {$I os2types.pas}
@@ -86,15 +87,27 @@ Var
 
 {******************************************************************************************}
 
+const
+  MenuColors : MenuColorArray =
+  ($08+CyanOnBlue,                      {FrameColor}
+    $4E,                     {HeaderColor}
+    WhiteOnBlue,             {BodyColor}
+    BlueOnLtGray,            {SelectColor}
+    YellowOnBlue,            {HiliteColor}
+    WhiteOnBlack,            {HelpColor}
+    $17,                     {DisabledColor}
+    $03                      {ShadowColor}
+    );
+
 procedure ShowOK;
 const
   Colors : MenuColorArray =
   ($17,                      {FrameColor}
     $4E,                     {HeaderColor}
-    WhiteOnBlue,              {BodyColor}
-    BlueOnLtGray,             {SelectColor}
-    YellowOnBlue,             {HiliteColor}
-    BlackOnLtGray,           {HelpColor}
+    WhiteOnBlue,             {BodyColor}
+    BlueOnLtGray,            {SelectColor}
+    YellowOnBlue,            {HiliteColor}
+    WhiteOnBlack,            {HelpColor}
     $17,                     {DisabledColor}
     $03                      {ShadowColor}
     );
@@ -108,14 +121,13 @@ var
   YN: Menu;
   SelectKey: Char;
 Begin
-  Window(1,1,80,25);
   MakeWindow(W, 17, 8, 63, 14, True, True, True, YellowOnBlue, WhiteOnBlue, YellowOnBlue, ' Information ');
   DisplayWindow(W);
   Writeln;
   Writeln(' Choose OK to continue ');
 
   YN:=NewMenu([], nil);
-  SubMenu(20, 4, 0, Vertical, LotusFrame, Colors, '');
+  SubMenu(37, 12, 0, Vertical, LotusFrame, Colors, '');
   MenuItem(' OK ', 1, 2, Ord(Mok), '');
   ResetMenu(YN);
   MenuChoice(YN, SelectKey);
@@ -123,21 +135,21 @@ Begin
   DisposeWindow(W);
 
   // @todo temporary solution until implement KillWindow or EraseTopWindow
-  Window(2,5,80,25);
-  TextBackground(Blue);
-  TextColor(Cyan);
+  Window(1,5,80,25);
+  TextBackground(White);
+  TextColor(Black);
   ClrScr;
 end;
 
 procedure ShowWarning;
 const
   Colors : MenuColorArray =
-  ($17,                      {FrameColor}
+  (RedOnRed,                 {FrameColor}
     $4E,                     {HeaderColor}
-    WhiteOnRed,              {BodyColor}
-    RedOnLtGray,             {SelectColor}
-    YellowOnRed,             {HiliteColor}
-    BlackOnLtGray,           {HelpColor}
+    WhiteOnBlack,            {BodyColor}
+    BlackOnLtGray,           {SelectColor}
+    YellowOnBlack,           {HiliteColor}
+    WhiteOnBlack,            {HelpColor}
     $17,                     {DisabledColor}
     $03                      {ShadowColor}
     );
@@ -152,7 +164,7 @@ var
   YN: Menu;
   SelectKey: Char;
 Begin
-  MakeWindow(W, 17, 5, 63, 19, True, True, True, YellowOnRed, WhiteOnRed, YellowOnRed, ' WARNING! ');
+  MakeWindow(W, 17, 5, 63, 19, True, True, True, WhiteOnBlack, LtRedOnBlack, LtRedOnBlack, ' WARNING! ');
   DisplayWindow(W);
   Writeln;
   Writeln(' This is experimental software that');
@@ -164,7 +176,7 @@ Begin
   WriteLn(' Are you sure, you want to continue?');
 
   YN:=NewMenu([], nil);
-  SubMenu(20, 10, 0, Vertical, LotusFrame, Colors, '');
+  SubMenu(37, 15, 0, Vertical, LotusFrame, Colors, '');
   MenuItem(' Yes ', 1, 2, Ord(Myes), '');
   MenuItem(' No ', 2, 2, Ord(Mno), '');
   ResetMenu(YN);
@@ -173,11 +185,67 @@ Begin
   DisposeWindow(W);
 
   // @todo temporary solution until implement KillWindow or EraseTopWindow
-  Window(2,5,80,25);
-  TextBackground(Blue);
-  TextColor(Cyan);
+  Window(1,5,80,25);
+  TextBackground(White);
+  TextColor(Black);
   ClrScr;
 end;
+
+procedure ShowError(Text: String);
+var
+  W: WindowPtr;
+Begin
+  MakeWindow(W, 17, 7, 63, 13, True, True, True, WhiteOnBlack, LtRedOnBlack, LtRedOnBlack, ' WARNING! ');
+  DisplayWindow(W);
+  Writeln;
+  Writeln(Text);
+  DisposeWindow(W);
+  ReadLn;
+
+  // @todo temporary solution until implement KillWindow or EraseTopWindow
+  Window(1,5,80,25);
+  TextBackground(White);
+  TextColor(Black);
+  ClrScr;
+end;
+
+function SelectDisk(): Byte;
+var
+  YN: Menu;
+  SelectKey: Char;
+Var
+  i: integer;
+  DrivesArray: TDrivesArray;
+  p: integer;
+  DriveStatus: TDriveInformation;
+begin
+  YN:=NewMenu([], nil);
+  SubMenu(16, 5, 0, Vertical, SingleFrameChars, MenuColors, 'Select drive');
+  DrivesArray:=LvmGetDriveControlData();
+  p:=0;
+  for i:=Low(DrivesArray) to High(DrivesArray) do
+  begin
+    inc(p);
+    DriveStatus:=LvmGetDriveStatus(LvmGetDriveHandle(DrivesArray[i].DriveNumber));
+    MenuItem('Physical drive '+IntToStr(DrivesArray[i].DriveNumber)+' '+DriveStatus.Drive_Name+' '+IntToStr(Trunc(Extended(DrivesArray[i].DriveSize)*512/1024/1024))+'MB ('+IfThen(DriveStatus.Corrupt_Partition_Table, 'Corrupt',IfThen(isGPT(DrivesArray[i].DriveNumber),'GPT','MBR'))+')', p, 16, DrivesArray[i].DriveNumber, '');
+    if DriveStatus.Corrupt_Partition_Table then ShowError('Physical Drive ('+IntToStr(DrivesArray[i].DriveNumber)+'):'#10#13#10#13'Partition table is corrupt');
+    if DriveStatus.Unusable then ShowError('Physical Drive ('+IntToStr(DrivesArray[i].DriveNumber)+'):'#10#13#10#13'Unusable');
+  end;
+  ResetMenu(YN);
+  Result:=MenuChoice(YN, SelectKey);
+end;
+
+// Backup MBR sector to a file
+Procedure Backup_MBR_sector;
+var
+  F: integer;
+begin
+  ReadMBRSector(SelectDisk,sector0);
+  F:=FileCreate('MBR.BIN');
+  FileWrite(F, sector0, SizeOf(sector0));
+  FileClose(F);
+  ShowOK;
+End;
 
 
 // Rewrite start of preldr0 file acording to filesystem needs
@@ -237,134 +305,7 @@ FileClose( FH );
 End;
 
 
-// Install MBR for FreeLDR
 
-Procedure Install_MBR;
-Type
-  drvtype = packed record
-    drvletter: char;
-    PartNr   : Word;
-    partname : String[16];
-    End;
-
-VAR
-  Drive:        Byte;
-  bootNr:       Byte;
-  FH:           Integer;
-  FreeMBR:      Sector0Buf;
-{$ifdef OS2}
-  drvletterbuf: ARRAY [0..255] of Drvtype;
-  line1:        String;
-  File1:        Text;
-  LetterNr:     Word;
-  ReadLetters:  Boolean;
-  Prim, Log, i: Word;
-{$endif}
-
-
-Begin
-Write('Input disknumber for new MBR install (1''st disk is nr 1): ');
-Drive:=Ord(ReadKey)-Ord('1')+1;
-ClrScr;
-Writeln;
-
-{$ifdef OS2}
-
-Writeln('  Your disk number ',drive,' has the following partitions available for booting: ');
-exec('cmd.exe', '/C lvm.exe /query:all,' + chr(ord('1') + Drive) + ' > lvmtemp.tmp');
-assign(file1, 'lvmtemp.tmp');
-reset(file1);
-readln(file1, line1);  // not used
-letterNr := 1;
-readletters := true;
-Prim := 0;
-log := 4;
-While Not Eof( file1 ) Do
-  Begin
-  Readln (file1,line1);
-  If line1 = ''
-   Then
-     Begin
-     readletters := false;
-     Readln(file1);
-     Readln(file1);
-     Readln(file1);
-     End
-   Else If readletters = true
-    Then
-     Begin
-     If pos(':',line1) = 2 Then With drvletterbuf[letterNr] Do
-       Begin
-       drvletter := line1[1];
-       PartName := copy(line1,4,16);
-       letterNr := succ(letterNr);
-       End;
-     End
-    Else
-      Begin
-      If pos('Primary',line1) = 35 Then
-        Begin
-        Prim := succ(Prim);
-        For i := 1 to letterNr-1 Do With drvletterbuf[i] Do
-          Begin
-          If copy(line1,4,16) = PartName Then
-            Begin
-            PartNr := Prim;
-            End
-          End;
-        End
-      Else If pos('Logical',line1) = 35 Then
-        Begin
-        If Log = 3
-         Then Prim := Succ (Prim);
-        Log := Succ (log);
-        For i := 1 to letterNr-1 Do With drvletterbuf[i] Do
-          Begin
-          If copy(line1,4,16) = PartName Then
-            Begin
-            PartNr := Log;
-            End
-          End;
-
-        End;
-      End;
-  End; { while }
-Writeln(' Nr  Drive  Partition Name');
-For i := 1 To letterNr-1 Do With drvletterbuf[i] Do
-  Begin
-  Writeln(PartNr:3,'    ',drvletter,':   ',PartName);
-  End;
-Close(file1);
-DeleteFile('lvmtemp.tmp');
-
-{$endif}
-
-Writeln;
-Writeln('Primary partitions are numbered from 1-4    ');
-Writeln('Logical partitions are numbered from 5-255');
-Writeln;
-Write('Which Partition number do you want to boot from (see numbers above) ? ');
-BootNr:=Ord(ReadKey)-Ord('1')+1;
-ReadMBRSector(Drive, sector0);
-FH := FileOpen( drive1+'\boot\sectors\mbr.bin', fmOpenRead OR fmShareDenyNone);
-If FH > 0 Then
-  Begin
-  FileRead( FH, FreeMBR, Sector0Len );
-  FileClose( FH );
-  StrMove( @FreeMBR[$1b8], @Sector0[$1b8], 72 );    //  Rewrite Partition Table and NTFS sig from HD
-  FreeMBR[$1bc] := chr(BootNr);                     //  Insert partition bootnumber
-  FreeMBR[$1bd] := chr($80);                        //  Insert disk boot number
-  Sector0 := FreeMBR;
-  WriteMBRSector(Drive, sector0);
-  Writeln(#10,'Your MBR have been upgraded to FreeLDR , Press <Enter> to continue ');
-  Readln;
-  End
- Else
-  Begin
-  Writeln('OS/2 Error ',-FH,' opening MBR.bin');
-  Halt(1);
-  End;
-End;
 
 
 // Install FreeLDR on FAT (12/16) partition + floppy
@@ -878,28 +819,16 @@ End;
 
 Procedure InitDesktop;
 begin
-  TextBackground(Blue);
-  TextColor(Cyan);
   HighVideo;
+  TextBackground(White);
+  TextColor(Black);
   ClrScr;
   WriteLn;
   Writeln(' ',version);
-  Writeln(' '#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205);
+  Writeln(' '#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205#205);
 end;
 
 Procedure SelectDrive;
-const
-  Colors : MenuColorArray =
-  ($17,                      {FrameColor}
-    $4E,                     {HeaderColor}
-    WhiteOnBlue,             {BodyColor}
-    BlackOnCyan,             {SelectColor}
-    $1E,                     {HiliteColor}
-    BlackOnLtGray,           {HelpColor}
-    $17,                     {DisabledColor}
-    $03                      {ShadowColor}
-    );
-
 Var
  Drives: DriveSet;
  Drive3: Char;
@@ -920,7 +849,7 @@ Begin
   Writeln;
 
   YN:=NewMenu([], nil);
-  SubMenu(20, 5, 0, Vertical, BoldFrameChars, Colors, '');
+  SubMenu(20, 7, 0, Vertical, SingleFrameChars, MenuColors, '');
 
   Pstn:=1;
   for Drive3 := 'A' to 'Z' do
@@ -943,7 +872,7 @@ Begin
         dtNDFS32    : Desc := 'Netdrive virtual drive';
         dtInvalid   : Desc := 'Invalid or unknown drive type';
       end;
-      MenuItem(Drive3+': '+Desc, Pstn, 1, Ord(Drive3), '');
+      MenuItem(' '+Drive3+': '+Desc, Pstn, 2, Ord(Drive3), '');
           Inc(Pstn);
     end;
 
@@ -1007,52 +936,6 @@ begin
   FrameChars:=BoldFrameChars;
 end;
 
-function SelectDisk(): Byte;
-const
-  Colors : MenuColorArray =
-  ($17,                      {FrameColor}
-    $4E,                     {HeaderColor}
-    WhiteOnBlue,             {BodyColor}
-    BlackOnCyan,             {SelectColor}
-    YellowOnBlue,            {HiliteColor}
-    BlackOnLtGray,           {HelpColor}
-    $17,                     {DisabledColor}
-    $03                      {ShadowColor}
-    );
-var
-  YN: Menu;
-  SelectKey: Char;
-Var
-  i: integer;
-  DrivesArray: TDrivesArray;
-  p: integer;
-begin
-  YN:=NewMenu([], nil);
-  SubMenu(26, 5, 0, Vertical, BoldFrameChars, Colors, 'Select drive');
-  DrivesArray:=LvmGetDriveControlData;
-  p:=0;
-  for i:=Low(DrivesArray) to High(DrivesArray) do
-  begin
-    inc(p);
-    MenuItem('Physical drive '+IntToStr(DrivesArray[i].DriveNumber)+' ('+IfThen(isGPT(DrivesArray[i].DriveNumber),'GPT','MBR')+')', p, 16, DrivesArray[i].DriveNumber, '');
-  end;
-  ResetMenu(YN);
-  Result:=MenuChoice(YN, SelectKey);
-end;
-
-// Backup MBR sector to a file
-Procedure Backup_MBR_sector;
-var
-  F: integer;
-begin
-  ReadMBRSector(SelectDisk,sector0);
-  F:=FileCreate('MBR.BIN');
-  FileWrite(F, sector0, SizeOf(sector0));
-  FileClose(F);
-  ShowOK;
-End;
-
-
 procedure Install_LDR;
 Begin
   Case DriveT Of
@@ -1085,18 +968,6 @@ end;
 { ***********************************************************************************************************
   ********************************************       MAIN      **********************************************
   *********************************************************************************************************** }
-
-const
-  Colors : MenuColorArray =
-  ($88+WhiteOnBlue,                      {FrameColor}
-    $4E,                     {HeaderColor}
-    $08+CyanOnBlue,          {BodyColor}
-    BlackOnCyan,             {SelectColor}
-    YellowOnBlue,            {HiliteColor}
-    BlackOnLtGray,           {HelpColor}
-    $17,                     {DisabledColor}
-    $03                      {ShadowColor}
-    );
 
 type
   MakeCommands =             {codes returned by each menu selection}
@@ -1132,7 +1003,11 @@ Begin
 }
   InitDesktop;
   ShowWarning;
-  writeln(LvmOpenEngine(False));
+  if LvmOpenEngine(False)<>0 then
+  begin
+    WriteLn('Cannot open LVM Engine.');
+    Halt(255);
+  end;
 
   OldExitProc   := ExitProc;
   ExitProc      := @MyExitProc;
@@ -1145,13 +1020,13 @@ Begin
     Writeln('                   Partition ',drive1,' is selected for install');
     Writeln;
     YN:=NewMenu([], nil);
-    SubMenu(10, 1, 25, Vertical, BoldFrameChars, Colors, '');
+    SubMenu(20, 7, 25, Vertical, SingleFrameChars, MenuColors, '');
     MenuItem(' 1: Install new MBR for FreeLDR', 1, 2, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
     MenuItem(' 2: Install FreeLDR on a partition', 2, 2, Ord(MInstallFreeLdr), 'Install FreeLDR on selected partition');
     MenuItem(' 3: Backup MBR sector', 3, 2, Ord(MBackupMBR), 'Make back up copy of Master Boot Record from selected drive');
     MenuItem(' 4: Backup a BootBlock', 4, 2, Ord(MBackUpBootBlock), 'Make back up copy of Master Boot Record from selected partition');
-    MenuItem(' 5: Restore MBR sector from backup file', 5, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
-    MenuItem(' 6: Restore a BootBlock from backup file', 6, 2, Ord(MRestoreBootBlock), 'Restore a BootBlock from backup file');
+    MenuItem(' 5: Restore MBR sector', 5, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
+    MenuItem(' 6: Restore a BootBlock', 6, 2, Ord(MRestoreBootBlock), 'Restore a BootBlock from backup file');
     MenuItem(' 9: Change partition', 7, 2, Ord(MChangePartition), 'Change partition to install, backup or restore to');
     MenuItem(' 0: Exit', 8, 2, Ord(MExit), 'Exit FreeLDR installer');
     ResetMenu(YN);

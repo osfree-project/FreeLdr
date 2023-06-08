@@ -42,6 +42,7 @@ const
   BlackOnMagenta     = $50;
   BlackOnBrown       = $60;
   BlackOnLtGray      = $70;
+  BlackOnLightGray   = $70;
 
   BlueOnBlack        = $01;
   BlueOnBlue         = $11;
@@ -51,7 +52,8 @@ const
   BlueOnMagenta      = $51;
   BlueOnBrown        = $61;
   BlueOnLtGray       = $71;
-  
+  BlueOnLightGray    = $71;
+
   GreenOnBlack       = $02;
   GreenOnBlue        = $12;
   GreenOnGreen       = $22;
@@ -60,6 +62,7 @@ const
   GreenOnMagenta     = $52;
   GreenOnBrown       = $62;
   GreenOnLtGray      = $72;
+  GreenOnLightGray   = $72;
 
   CyanOnBlack        = $03;
   CyanOnBlue         = $13;
@@ -69,6 +72,7 @@ const
   CyanOnMagenta      = $53;
   CyanOnBrown        = $63;
   CyanOnLtGray       = $73;
+  CyanOnLightGray    = $73;
 
   RedOnBlack         = $04;
   RedOnBlue          = $14;
@@ -78,6 +82,7 @@ const
   RedOnMagenta       = $54;
   RedOnBrown         = $64;
   RedOnLtGray        = $74;
+  RedOnLightGray     = $74;
 
   MagentaOnBlack     = $05;
   MagentaOnBlue      = $15;
@@ -87,6 +92,7 @@ const
   MagentaOnMagenta   = $55;
   MagentaOnBrown     = $65;
   MagentaOnLtGray    = $75;
+  MagentaOnLightGray = $75;
 
   BrownOnBlack       = $06;
   BrownOnBlue        = $16;
@@ -96,6 +102,7 @@ const
   BrownOnMagenta     = $56;
   BrownOnBrown       = $66;
   BrownOnLtGray      = $76;
+  BrownOnLightGray   = $76;
 
   LtGrayOnBlack      = $07;
   LtGrayOnBlue       = $17;
@@ -105,6 +112,7 @@ const
   LtGrayOnMagenta    = $57;
   LtGrayOnBrown      = $67;
   LtGrayOnLtGray     = $77;
+  LightGrayOnLightGray = $77;
 
   DkGrayOnBlack      = $08;
   DkGrayOnBlue       = $18;
@@ -114,6 +122,7 @@ const
   DkGrayOnMagenta    = $58;
   DkGrayOnBrown      = $68;
   DkGrayOnLtGray     = $78;
+  DkGrayOnLightGray  = $78;
 
   LtBlueOnBlack      = $09;
   LtBlueOnBlue       = $19;
@@ -123,6 +132,7 @@ const
   LtBlueOnMagenta    = $59;
   LtBlueOnBrown      = $69;
   LtBlueOnLtGray     = $79;
+  LtBlueOnLightGray  = $79;
 
   LtGreenOnBlack     = $0A;
   LtGreenOnBlue      = $1A;
@@ -132,6 +142,7 @@ const
   LtGreenOnMagenta   = $5A;
   LtGreenOnBrown     = $6A;
   LtGreenOnLtGray    = $7A;
+  LtGreenOnLightGray = $7A;
 
   LtCyanOnBlack      = $0B;
   LtCyanOnBlue       = $1B;
@@ -141,6 +152,7 @@ const
   LtCyanOnMagenta    = $5B;
   LtCyanOnBrown      = $6B;
   LtCyanOnLtGray     = $7B;
+  LtCyanOnLightGray  = $7B;
 
   LtRedOnBlack       = $0C;
   LtRedOnBlue        = $1C;
@@ -150,6 +162,7 @@ const
   LtRedOnMagenta     = $5C;
   LtRedOnBrown       = $6C;
   LtRedOnLtGray      = $7C;
+  LtRedOnLightGray   = $7C;
 
   LtMagentaOnBlack   = $0D;
   LtMagentaOnBlue    = $1D;
@@ -159,6 +172,7 @@ const
   LtMagentaOnMagenta = $5D;
   LtMagentaOnBrown   = $6D;
   LtMagentaOnLtGray  = $7D;
+  LtMagentaOnLightGray = $7D;
 
   YellowOnBlack      = $0E;
   YellowOnBlue       = $1E;
@@ -168,6 +182,7 @@ const
   YellowOnMagenta    = $5E;
   YellowOnBrown      = $6E;
   YellowOnLtGray     = $7E;
+  YellowOnLightGray  = $7E;
 
   WhiteOnBlack       = $0F;
   WhiteOnBlue        = $1F;
@@ -177,6 +192,7 @@ const
   WhiteOnMagenta     = $5F;
   WhiteOnBrown       = $6F;
   WhiteOnLtGray      = $7F;
+  WhiteOnLightGray   = $7F;
 
 implementation
 

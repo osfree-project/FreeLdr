@@ -230,12 +230,12 @@ begin
     GetMem(Name, Length(NameStr)+1);
     Move(NameStr, Name^, Length(NameStr)+1);
     If HelpStr<>'' then
-	begin
-	  GetMem(Help, Length(HelpStr)+1);
+        begin
+          GetMem(Help, Length(HelpStr)+1);
       Move(HelpStr, Help^, Length(HelpStr)+1);
-	end else begin
-	  Help:=nil;
-	end;
+        end else begin
+          Help:=nil;
+        end;
     OnHeap:=True;
     Enabled:=True;
   end;
@@ -263,7 +263,7 @@ begin
     H:=YL+DisplayPosP-1;
     if Framed then H:=H+2;
     if YH<H then YH:=H;
-    
+
   end;
 end;
 
@@ -302,44 +302,44 @@ var
 begin
   with SubMnu^, Draw do
   begin
+    OldTextAttr:=TextAttr;
+    WMin:=WindMin;
+    WMax:=WindMax;
+    Window(1,1,ScreenWidth,ScreenHeight);
     GoToXY(XL1, YL1+Item^.DisplayPos-1);
     if Item^.Name = nil then
       S[0] := #0
     else
       S:=string(Item^.Name^);
-    OldTextAttr:=TextAttr;
     If Item=Items.Current then
       TextAttr:=Colors[SelectColor]
     else
       TextAttr:=Colors[BodyColor];
     If Item^.SelectPos>0 then
-	begin
-	  Write(Copy(S, 1, Item^.SelectPos-1));
+        begin
+          Write(Copy(S, 1, Item^.SelectPos-1));
       TextAttr:=Colors[HiliteColor];
-	  Write(S[Item^.SelectPos]);
+          Write(S[Item^.SelectPos]);
       If Item=Items.Current then
         TextAttr:=Colors[SelectColor]
       else
         TextAttr:=Colors[BodyColor];
-	  Write(Copy(S, Item^.SelectPos+1, Length(S)-Item^.SelectPos));
-	end else
-	  Write(S);
+          Write(Copy(S, Item^.SelectPos+1, Length(S)-Item^.SelectPos));
+        end else
+          Write(S);
     While WhereX<XH do Write(' ');
     If Item=Items.Current then
-	begin
+        begin
       if Item^.Help <> nil then
-	  begin
-		WMin:=WindMin;
-		WMax:=WindMax;
-		Window(1,1,80,25);
-        GoToXY(1, YHelp);
-		TextAttr:=Colors[HelpColor];
-	    Write(string(Item^.Help^));
-  	    ClrEOL;
-		Window(Lo(WMin)+1, Hi(WMin)+1, Lo(WMax)+1, Hi(WMax)+1);
-	  end;
-	end;
+          begin
+            GoToXY(1, YHelp);
+            TextAttr:=Colors[HelpColor];
+            Write(string(Item^.Help^));
+            ClrEOL;
+          end;
+        end;
     TextAttr:=OldTextAttr;
+    Window(Lo(WMin)+1, Hi(WMin)+1, Lo(WMax)+1, Hi(WMax)+1);
   end;
 end;
 
@@ -347,17 +347,20 @@ procedure DrawSubMenu(SubMnu : SubMenuP; UserFunc : Pointer);
   {-Draw a submenu on-screen}
 var
   Item: ItemP;
+  OldFrameChars: FrameArray;
 begin
   with SubMnu^, Draw do
   begin
+    OldFrameChars:=FrameChars;
     FrameChars:=Frame;
-    if Framed then FrameWindow(XL, YL, XH, YH, Colors[FrameColor], Colors[FrameColor], '');
+    if Framed then FrameWindow(XL, YL, XH, YH, Colors[FrameColor], Colors[FrameColor], String(Header^));
 
     Item := Items.First;
     while Item <> nil do begin
       DrawItem(SubMnu, Item, UserFunc);
       Item := Item^.Next;
     end;
+    FrameChars:=OldFrameChars;
   end;
 end;
 

@@ -2,7 +2,7 @@
 
      LVM support
 
-         Copyright (C) 2022-2023 osFree
+     Copyright (C) 2022-2023 osFree
 
      All rights reserved.
 
@@ -37,6 +37,8 @@ unit LVMApi;
 under Win32/Linux/DOS it emulates required functions.}
 
 interface
+
+{$PACKRECORDS 1}
 
 uses
 {$ifdef Windows}
@@ -102,7 +104,6 @@ type
   Cardinal32=Cardinal;
   ADDRESS=Pointer;
 
-// @todo check real packing!!!
   TDriveControl=packed record
     DriveNumber: CARDINAL32;                   (* OS/2 Drive Number for this drive. *)
     DriveSize: CARDINAL32;                     (* The total number of sectors on the drive. *)
@@ -117,13 +118,88 @@ type
 
   TDrivesArray=Array of TDriveControl;
 
+  TDriveInformation=record
+    Total_Available_Sectors: CARDINAL32;        // The number of sectors on the disk which are not currently assigned to a partition.
+    Largest_Free_Block_Of_Sectors: CARDINAL32;  // The number of sectors in the largest contiguous block of available sectors.
+    Corrupt_Partition_Table: BOOLEAN;           // If TRUE, then the partitioning information found on the drive is incorrect!
+    Unusable: BOOLEAN;                          // If TRUE, the drive's MBR is not accessible and the drive can not be partitioned.
+    IO_Error: BOOLEAN;                          // If TRUE, then the last I/O operation on this drive failed!
+    Is_Big_Floppy: BOOLEAN;                     // If TRUE, then the drive is a PRM formatted as a big floppy (i.e. the old style removable media support).
+    Drive_Name: Array[0..DISK_NAME_SIZE-1] of Char; // User assigned name for this disk drive.
+  end;
+
+  TPartitionInformation=record
+    Partition_Handle: ADDRESS;                      // The handle used to perform operations on this partition.
+    Volume_Handle: ADDRESS;                         // If this partition is part of a volume, this will be the handle of
+                                                    //the volume.  If this partition is NOT part of a volume, then this
+                                                    //handle will be 0.
+    Drive_Handle: ADDRESS;                          // The handle for the drive this partition resides on.
+    Partition_Serial_Number: DoubleWord;            // The serial number assigned to this partition.
+    Partition_Start: CARDINAL32;                    // The LBA of the first sector of the partition.
+    True_Partition_Size: CARDINAL32;                // The total number of sectors comprising the partition.
+    Usable_Partition_Size: CARDINAL32;              // The size of the partition as reported to the IFSM.  This is the
+                                                    //size of the partition less any LVM overhead.
+    Boot_Limit: CARDINAL32;                         // The maximum number of sectors from this block of free space that can be used to
+                                                    //create a bootable partition if you allocate from the beginning of the block of
+                                                    //free space.
+    Spanned_Volume: BOOLEAN;                        // TRUE if this partition is part of a multi-partition volume.
+    Primary_Partition: BOOLEAN;                     // True or False.  Any non-zero value here indicates that
+                                                    //this partition is a primary partition.  Zero here indicates
+                                                    //that this partition is a "logical drive" - i.e. it resides
+                                                    //inside of an extended partition.
+    Active_Flag: BYTE;                              // 80 = Partition is marked as being active.
+                                                    // 0 = Partition is not active.
+    OS_Flag: BYTE;                                  // This field is from the partition table.  It is known as the
+                                                    //OS flag, the Partition Type Field, Filesystem Type, and
+                                                    //various other names.
+
+                                                    //Values of interest
+
+                                                    //If this field is: (values are in hex)
+
+                                                    //07 = The partition is a compatibility partition formatted for use
+                                                    //with an installable filesystem, such as HPFS or JFS.
+                                                    //00 = Unformatted partition
+                                                    //01 = FAT12 filesystem is in use on this partition.
+                                                    //04 = FAT16 filesystem is in use on this partition.
+                                                    //0A = OS/2 Boot Manager Partition
+                                                    //35 = LVM partition
+                                                    //84 = OS/2 FAT16 partition which has been relabeled by Boot Manager to "Hide" it.
+    Partition_Type: BYTE;                           // 0 = Free Space
+                                                    //1 = LVM Partition (Part of an LVM Volume.)
+                                                    //2 = Compatibility Partition
+                                                    //All other values are reserved for future use.
+    Partition_Status: BYTE;                         // 0 = Free Space
+                                                    //1 = In Use - i.e. already assigned to a volume.
+                                                    //2 = Available - i.e. not currently assigned to a volume.
+    On_Boot_Manager_Menu: BOOLEAN;                  // Set to TRUE if this partition is not part of a Volume yet is on the Boot Manager Menu.
+    Reserved: BYTE;                                 // Alignment.
+    Volume_Drive_Letter: char;                      // The drive letter assigned to the volume that this partition is a part of.
+    Drive_Name: Array[0..DISK_NAME_SIZE-1] of char;   // User assigned name for this disk drive.
+    File_System_Name: Array[0..FILESYSTEM_NAME_SIZE-1] of char;// The name of the filesystem in use on this partition, if it is known.
+    Partition_Name: Array[0..PARTITION_NAME_SIZE-1] of char;   // The user assigned name for this partition.
+    Volume_Name: Array[0..VOLUME_NAME_SIZE-1] of char;         // If this partition is part of a volume, then this will be the
+                                                             //name of the volume that this partition is a part of.  If this
+                                                             //record represents free space, then the Volume_Name will be
+                                                             //"FREE SPACE xx", where xx is a unique numeric ID generated by
+                                                             //LVM.DLL.  Otherwise it will be an empty string.
+  end;
+
+  TPartitionsArray=Array of TPartitionInformation;
+
 function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
 procedure LvmCloseEngine();
 function LvmCommitChanges(): CARDINAL32;
 function LvmGetDriveControlData: TDrivesArray;
+function LvmGetPartitions(Handle: ADDRESS): TPartitionsArray;
 function LvmFreeEngineMemory(LVMObject: ADDRESS): CARDINAL32;
 function LvmReadSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Read: CARDINAL32; var Buffer): CARDINAL32;
 function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; var Buffer): CARDINAL32;
+function LvmGetDriveHandle(Drive_Number: CARDINAL32): ADDRESS;
+function LvmGetDriveStatus(Drive_Handle: ADDRESS): TDriveInformation;
+function LvmGetPartitionType(PartitionType: BYTE): String;
+function LvmGetPartitionStatus(PartitionStatus: BYTE): String;
+
 
 implementation
 
@@ -284,10 +360,10 @@ begin
   Close_LVM_Engine;
 {$endif}
 {$ifdef windows}
-        for i:=Low(DrivesArray) to High(DrivesArray) do
-        begin
-                CloseHandle(HANDLE(DrivesArray[i].DriveHandle));
-        end;
+  for i:=Low(DrivesArray) to High(DrivesArray) do
+  begin
+    CloseHandle(HANDLE(DrivesArray[i].DriveHandle));
+  end;
 {$endif}
 end;
 
@@ -325,6 +401,29 @@ begin
   result:=DrivesArray;
 end;
 
+var
+  PartitionsArray: TPartitionsArray;
+
+function LvmGetPartitions(Handle: ADDRESS): TPartitionsArray;
+{$ifdef OS2}
+var
+  Res: CARDINAL32;
+  PIA: Partition_Information_Array;
+  i: integer;
+{$endif}
+begin
+{$ifdef OS2}
+  PIA:=Get_Partitions(Handle, @Res);
+  SetLength(PartitionsArray, PIA.Count);
+  For i:=Low(PartitionsArray) to High(PartitionsArray) do
+  begin
+    PartitionsArray[i]:=TPartitionInformation(PIA.Partition_Array[i]);
+  end;
+  Result:=PartitionsArray;
+//writeln('ok');
+{$endif}
+end;
+
 function LvmFreeEngineMemory(LVMObject: ADDRESS): CARDINAL32;
 begin
 {$ifdef OS2}
@@ -339,12 +438,12 @@ end;
 function LvmReadSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Read: CARDINAL32; var Buffer): CARDINAL32;
 {$ifdef windows}
 var
-        i: integer;
-        DataLen: LongWord;
+  DataLen: LongWord;
+  Hndl: HANDLE;
 {$endif}
 {$ifdef OS2}
 var
-        Res: CARDINAL32;
+  Res: CARDINAL32;
 {$endif}
 begin
 {$ifdef OS2}
@@ -353,47 +452,79 @@ begin
 {$endif}
 
 {$ifdef windows}
-        for i:=Low(DrivesArray) to High(DrivesArray) do
-        begin
-                if DrivesArray[i].DriveNumber=Drive_Number then
-                begin
-                        SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
-                        if ReadFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Read*512, DataLen, nil)=false then writeln('error');
-                        break;
-                end;
-        end;
-        result:=LVM_ENGINE_NO_ERROR;
+  Hndl:=LvmGetDriveHandle(Drive_Number);
+  SetFilePointer(Hndl), Starting_Sector*512, nil, FILE_BEGIN);
+  if ReadFile(Hndl), Buffer, Sectors_To_Read*512, DataLen, nil)=false then writeln('error');
+  result:=LVM_ENGINE_NO_ERROR;
 {$endif}
 end;
 
 function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; var Buffer): CARDINAL32;
 {$ifdef windows}
 var
-        i: integer;
-        DataLen: LongWord;
+  Hndl: HANDLE;
+  DataLen: LongWord;
 {$endif}
 {$ifdef OS2}
 var
-        Res: CARDINAL32;
+  Res: CARDINAL32;
 {$endif}
 begin
 {$ifdef OS2}
-        Write_Sectors(Drive_Number, Starting_Sector, Sectors_To_Write, @Buffer, @Res);
-        Result:=Res;
+  Write_Sectors(Drive_Number, Starting_Sector, Sectors_To_Write, @Buffer, @Res);
+  Result:=Res;
 {$endif}
 
 {$ifdef windows}
-        for i:=Low(DrivesArray) to High(DrivesArray) do
-        begin
-                if DrivesArray[i].DriveNumber=Drive_Number then
-                begin
-                        SetFilePointer(HANDLE(DrivesArray[i].DriveHandle), Starting_Sector*512, nil, FILE_BEGIN);
-                        WriteFile(HANDLE(DrivesArray[i].DriveHandle), Buffer, Sectors_To_Write*512, DataLen, nil);
-                        break;
-                end;
-        end;
-        result:=LVM_ENGINE_NO_ERROR;
+  Hndl:=LvmGetDriveHandle(Drive_Number);
+  SetFilePointer(Hndl), Starting_Sector*512, nil, FILE_BEGIN);
+  WriteFile(HANDLE(Hndl), Buffer, Sectors_To_Write*512, DataLen, nil);
+  result:=LVM_ENGINE_NO_ERROR;
 {$endif}
+end;
+
+function LvmGetDriveHandle(Drive_Number: CARDINAL32): ADDRESS;
+var
+  i: integer;
+begin
+  Result:=nil;
+  for i:=Low(DrivesArray) to High(DrivesArray) do
+  begin
+    if DrivesArray[i].DriveNumber=Drive_Number then
+    begin
+      Result:=DrivesArray[i].DriveHandle;
+      Break;
+    end;
+  end;
+end;
+
+function LvmGetDriveStatus(Drive_Handle: ADDRESS): TDriveInformation;
+{$ifdef OS2}
+var
+  Res: CARDINAL32;
+{$endif}
+begin
+{$ifdef OS2}
+  Result:=TDriveInformation(Get_Drive_Status(Drive_Handle, @Res));
+{$endif}
+end;
+
+Function LvmGetPartitionType(PartitionType: BYTE): String;
+begin
+  Case PartitionType of
+    0: Result:='Free Space';
+    1: Result:='LVM';
+    2: Result:='Compatibility';
+  end;
+end;
+
+Function LvmGetPartitionStatus(PartitionStatus: BYTE): String;
+begin
+  Case PartitionStatus of
+    0: Result:='Free Space';
+    1: Result:='In Use';
+    2: Result:='Available';
+  end;
 end;
 
 end.
