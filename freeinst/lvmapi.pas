@@ -99,6 +99,15 @@ const
   LVM_ENGINE_CAN_NOT_WRITE_TO_LOG_FILE         =46;
   LVM_ENGINE_REDISCOVER_FAILED                 =47;
 
+const
+  PARTITION_NAME_SIZE = 20;
+  VOLUME_NAME_SIZE = 20;
+  DISK_NAME_SIZE = 20;
+  FILESYSTEM_NAME_SIZE = 20;
+
+Type
+  DoubleWord=Cardinal;
+
 type
   LBA=LongWord;
   Cardinal32=Cardinal;
@@ -452,9 +461,9 @@ begin
 {$endif}
 
 {$ifdef windows}
-  Hndl:=LvmGetDriveHandle(Drive_Number);
-  SetFilePointer(Hndl), Starting_Sector*512, nil, FILE_BEGIN);
-  if ReadFile(Hndl), Buffer, Sectors_To_Read*512, DataLen, nil)=false then writeln('error');
+  Hndl:=HANDLE(LvmGetDriveHandle(Drive_Number));
+  SetFilePointer(Hndl, Starting_Sector*512, nil, FILE_BEGIN);
+  if ReadFile(Hndl, Buffer, Sectors_To_Read*512, DataLen, nil)=false then writeln('error');
   result:=LVM_ENGINE_NO_ERROR;
 {$endif}
 end;
@@ -476,9 +485,9 @@ begin
 {$endif}
 
 {$ifdef windows}
-  Hndl:=LvmGetDriveHandle(Drive_Number);
-  SetFilePointer(Hndl), Starting_Sector*512, nil, FILE_BEGIN);
-  WriteFile(HANDLE(Hndl), Buffer, Sectors_To_Write*512, DataLen, nil);
+  Hndl:=HANDLE(LvmGetDriveHandle(Drive_Number));
+  SetFilePointer(Hndl, Starting_Sector*512, nil, FILE_BEGIN);
+  WriteFile(Hndl, Buffer, Sectors_To_Write*512, DataLen, nil);
   result:=LVM_ENGINE_NO_ERROR;
 {$endif}
 end;

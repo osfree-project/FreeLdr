@@ -87,13 +87,24 @@ function ScreenX: Byte;
 function ScreenY: Byte;
   {-Return absolute row coordinate of cursor}
 
+procedure FastWrite(St : string; Row, Col, Attr : Byte);
+  {-Write St at Row,Col in Attr (video attribute) without snow}
+
 {Forwarders to CRT}
 var
   TextAttr: byte absolute Crt.TextAttr;
   WindMin: Word absolute Crt.WindMin;
   WindMax: Word absolute Crt.WindMax;
+  {$IFNDEF Windows}
   ScreenWidth: Longint absolute Crt.ScreenWidth;
   ScreenHeight: Longint absolute Crt.ScreenHeight;
+  {$ELSE}
+  ScreenWidth: Longint = 80;
+  ScreenHeight: Longint = 25;
+
+procedure SetSafeCPSwitching(F: Boolean);
+procedure SetUseACP(F: Boolean);
+  {$ENDIF}
 
 procedure ClrScr;
 procedure TextBackground(C: byte);
@@ -107,7 +118,31 @@ function ReadKey: Char;
 procedure Delay(MS: Word);
 procedure HighVideo;
 
+
 implementation
+
+procedure FastWrite(St : string; Row, Col, Attr : Byte);
+  {-Write St at Row,Col in Attr (video attribute) without snow}
+var
+  oldTextAttr: Byte;
+  OldWindMin, OldWindMax: Word;
+  OldX, OldY: Byte;
+begin
+  OldTextAttr:=TextAttr;
+  OldWindMin:=WindMin;
+  OldWindMax:=WindMax;
+  OldX:=WhereX;
+  OldY:=WhereY;
+
+  TextAttr:=Attr;
+  Window(1, 1, ScreenWidth, ScreenHeight);
+  GoToXY(Col, Row);
+  Write(St);
+
+  TextAttr:=OldTextAttr;
+  Window(Lo(OldWindMin)+1, Hi(OldWindMin)+1, Lo(OldWindMax)+1, Hi(OldWindMax)+1);
+  GoToXY(OldX, OldY);
+end;
 
 procedure FrameWindow(LeftCol, TopRow, RightCol, BotRow, FAttr, HAttr : Byte;
                       Header : string);
@@ -241,4 +276,15 @@ begin
   Crt.HighVideo;
 end;
 
+{$ifdef windows}
+procedure SetSafeCPSwitching(F: Boolean);
+begin
+  Crt.SetSafeCPSwitching(F);
+end;
+
+procedure SetUseACP(F: Boolean);
+begin
+  Crt.SetUseACP(F);
+end;
+{$endif}
 end.
