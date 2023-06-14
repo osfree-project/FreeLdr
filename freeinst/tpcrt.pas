@@ -1,6 +1,6 @@
 {
 
-     osFree Turbo Professional Copyright (C) 2022 osFree
+     osFree Turbo Professional Copyright (C) 2022-2023 osFree
 
      All rights reserved.
 
@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 }
 
 unit tpcrt;
+  {-Extended CRT unit. Implements TurboPower Turbo Professional TPCRT intarface.}
 
 interface
 
@@ -90,6 +91,13 @@ function ScreenY: Byte;
 procedure FastWrite(St : string; Row, Col, Attr : Byte);
   {-Write St at Row,Col in Attr (video attribute) without snow}
 
+procedure SetFrameChars(Vertical, Horizontal, LowerRight, UpperRight,
+                        LowerLeft, UpperLeft : Char);
+  {-Sets the frame characters to be used on subsequent FrameWindow calls.}
+
+procedure WhereXYdirect(var X, Y : Byte);
+  {-Read the current position of the cursor directly from the CRT controller}
+
 {Forwarders to CRT}
 var
   TextAttr: byte absolute Crt.TextAttr;
@@ -121,6 +129,18 @@ procedure HighVideo;
 
 implementation
 
+procedure SetFrameChars(Vertical, Horizontal, LowerRight, UpperRight,
+                        LowerLeft, UpperLeft : Char);
+  {-Sets the frame characters to be used on subsequent FrameWindow calls.}
+begin
+  FrameChars[Vert]:=Vertical;
+  FrameChars[Horiz]:=Horizontal;
+  FrameChars[LRight]:=LowerRight;
+  FrameChars[URight]:=UpperRight;
+  FrameChars[LLeft]:=LowerLeft;
+  FrameChars[ULeft]:=UpperLeft;
+end;
+
 procedure FastWrite(St : string; Row, Col, Attr : Byte);
   {-Write St at Row,Col in Attr (video attribute) without snow}
 var
@@ -149,46 +169,26 @@ procedure FrameWindow(LeftCol, TopRow, RightCol, BotRow, FAttr, HAttr : Byte;
   {-Draws a frame around a window}
 var
   i: byte;
-  oldTextAttr: Byte;
-  OldWindMin, OldWindMax: Word;
-  OldX, OldY: Byte;
 begin
   CursorOff;
-  OldTextAttr:=TextAttr;
-  OldWindMin:=WindMin;
-  OldWindMax:=WindMax;
-  OldX:=WhereX;
-  OldY:=WhereY;
-  TextAttr:=FAttr;
-  Window(1, 1, ScreenWidth, ScreenHeight);
-  GoToXY(LeftCol, TopRow);
-  write(FrameChars[ULeft]);
-  for i:=LeftCol+1 to RightCol-1 do write(FrameChars[Horiz]);
-  write(FrameChars[URight]);
+  FastWrite(FrameChars[ULeft], TopRow, LeftCol, FAttr);
+  for i:=LeftCol+1 to RightCol-1 do FastWrite(FrameChars[Horiz], TopRow, i, FAttr);
+  FastWrite(FrameChars[URight], TopRow, RightCol, FAttr);
 
   for i:=TopRow+1 to BotRow-1 do
   begin
-    GoToXY(LeftCol, i);
-    write(FrameChars[Vert]);
-    GoToXY(RightCol, i);
-    write(FrameChars[Vert]);
+    FastWrite(FrameChars[Vert], i, LeftCol, FAttr);
+    FastWrite(FrameChars[Vert], i, RightCol, FAttr);
   end;
 
-  gotoxy(LeftCol, BotRow);
-  write(FrameChars[LLeft]);
-  for i:=LeftCol+1 to RightCol-1 do write(FrameChars[Horiz]);
-  write(FrameChars[LRight]);
+  FastWrite(FrameChars[LLeft], BotRow, LeftCol, FAttr);
+  for i:=LeftCol+1 to RightCol-1 do FastWrite(FrameChars[Horiz], BotRow, i, FAttr);
+  FastWrite(FrameChars[LRight], BotRow, RightCol, FAttr);
 
   if Header<>'' then
   begin
-    TextAttr:=HAttr;
-    GoToXY(LeftCol+(RightCol-LeftCol) div 2-Length(Header) div 2, TopRow);
-    Write(Header);
+    FastWrite(Header, TopRow, LeftCol+(RightCol-LeftCol) div 2-Length(Header) div 2, HAttr);
   end;
-
-  TextAttr:=OldTextAttr;
-  Window(Lo(OldWindMin)+1, Hi(OldWindMin)+1, Lo(OldWindMax)+1, Hi(OldWindMax)+1);
-  GoToXY(OldX, OldY);
 end;
 
 function WhereXAbs: Byte;
@@ -219,6 +219,13 @@ function WhereXY: Word;
   {-Return absolute coordinates of cursor}
 begin
   Result:=$ff*(WhereY)+(WhereX)+WindMin;
+end;
+
+procedure WhereXYdirect(var X, Y : Byte);
+  {-Read the current position of the cursor directly from the CRT controller}
+begin
+  X:=ScreenX;
+  Y:=ScreenY;
 end;
 
 procedure ClrScr;

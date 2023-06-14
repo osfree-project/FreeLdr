@@ -924,9 +924,11 @@ begin
   end;
 
   // Tune FPC CRT for correct codepage usage
-  SetSafeCPSwitching(True);
-  SetUseACP(True);
-  SetTextCodePage(Output, 437);
+//  SetSafeCPSwitching(True);
+//  SetUseACP(False);
+//  SetTextCodePage(Output, 437);
+  SetConsoleOutputCP(437);
+  //CrtCodepage(437);
 end;
 {$ENDIF}
 
