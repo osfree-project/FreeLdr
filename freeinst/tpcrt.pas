@@ -881,11 +881,18 @@ end;
 function Font8x8Selected : Boolean;
   {-Return True if EGA or VGA is active and in 8x8 font}
 begin
+  Result:=(CurrentMode and Font8x8)=Font8x8;
 end;
 
 procedure SelectFont8x8(On : Boolean);
   {-Toggle 8x8 font on or off}
 begin
+  if (CurrentMode and Font8x8)=Font8x8 then
+  begin
+    TextMode(LastMode - Font8x8);
+  end else begin
+    TextMode(LastMode or Font8x8);
+  end;
 end;
 
 function HercPresent : Boolean;
@@ -1013,7 +1020,6 @@ procedure NormVideo;
 begin
   Crt.NormVideo;
 end;
-
 
 procedure Sound(Hz: Word);
 begin
