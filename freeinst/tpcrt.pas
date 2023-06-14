@@ -66,6 +66,12 @@ const
   White = 15;
   Blink = 128;
 
+const
+ {Set to True to allow programs to run as background tasks under
+  DesqView/TaskView. Must be set False for TSR's.}
+  DetectMultitasking : Boolean = False;
+  BiosScroll : Boolean = True; {False to use TPCRT routines for clean scrolling}
+
 type
   FrameCharType = (ULeft, LLeft, URight, LRight, Horiz, Vert);
   FrameArray = array[FrameCharType] of Char;
@@ -77,6 +83,56 @@ const
   SingleFrameChars : FrameArray = #$DA#$C0#$BF#$D9#$C4#$B3;
   DoubleFrameChars : FrameArray = #$C9#$C8#$BB#$BC#$CD#$BA;
   BoldFrameChars : FrameArray = #$DB#$DB#$DB#$DB#$DB#$DB;
+
+const
+  MapColors : Boolean = True; {True to let MapColor map colors for mono visibility}
+
+type
+  DisplayType = (MonoHerc, CGA, MCGA, EGA, VGA, PGC);
+  HercCardType = (HercNone, HercPlain, HercPlus, HercInColor);
+  FlexAttrs = array[0..3] of Byte; {attributes for FlexWrite}
+
+  {record used to save/restore window coordinates}
+  WindowCoordinates =
+    record
+      XL, YL, XH, YH : Byte;
+    end;
+
+type
+  PackedScreen = array[1..4000] of Byte; {dummy--actual size varies}
+  PackedWindow =             {!!do not change!!}
+    record
+      Size : Word;           {size of packed window, including this header}
+      TopRow : Byte;         {coordinates for top left corner of window}
+      TopCol : Byte;
+      Rows : Byte;           {height of window}
+      Cols : Byte;           {width of window}
+      AStart : Word;         {index to start of attributes section in Contents}
+      CDelta : Word;         {bytes before first PackRec - chars}
+      ADelta : Word;         {bytes before first PackRec - attrs}
+      Contents : PackedScreen; {the contents of the packed screen}
+    end;
+  PackedWindowPtr = ^PackedWindow;
+
+type
+  LibName = string[12];
+  deName = array[1..11] of Char; {first 8 have name, last 3 have extension}
+  DirectoryEntry =
+    record
+      Status : ShortInt;     {0 = in use, -1 = unused, -2 = deleted}
+      Name : deName;         {name and extension in FCB format}
+      Index : Word;          {index to this member}
+      MemberLength : Word;   {# of 128-byte blocks used by member}
+      CRC : Word;            {not implemented}
+      CreationDate : Word;   {date entry was created--not used}
+      LastChangeDate : Word; {date it was last changed--not used}
+      CreationTime : Word;   {time entry was created--not used}
+      LastChangeTime : Word; {time it was last changed--not used}
+      PadCount : Byte;       {unused bytes in last block of member}
+      Filler : array[28..32] of Byte; {padded to 32 bytes}
+    end;
+  DirectoryType = array[0..255] of DirectoryEntry;
+  DirectoryPtr = ^DirectoryType;
 
 procedure FrameWindow(LeftCol, TopRow, RightCol, BotRow, FAttr, HAttr : Byte;
                       Header : string);
@@ -106,6 +162,233 @@ procedure SetFrameChars(Vertical, Horizontal, LowerRight, UpperRight,
 
 procedure WhereXYdirect(var X, Y : Byte);
   {-Read the current position of the cursor directly from the CRT controller}
+
+function GetCrtMode : Byte;
+ {-Get the current video mode. Also reinitializes internal variables. May
+   reset: CurrentMode, ScreenWidth, ScreenHeight, CurrentPage, and
+   VideoSegment.}
+
+procedure GotoXYAbs(X, Y : Byte);
+  {-Move cursor to column X, row Y. No error checking done.}
+
+procedure SetVisiblePage(PageNum : Byte);
+  {-Set current video page}
+
+procedure ScrollWindowUp(XLo, YLo, XHi, YHi, Lines : Byte);
+  {-Scrolls the designated window up the specified number of lines.}
+
+procedure ScrollWindowDown(XLo, YLo, XHi, YHi, Lines : Byte);
+  {-Scrolls the designated window down the specified number of lines.}
+
+function CursorTypeSL : Word;
+  {-Returns a word. High byte has starting scan line, low byte has ending.}
+
+function CursorStartLine : Byte;
+  {-Returns the starting scan line of the cursor}
+
+function CursorEndLine : Byte;
+  {-Returns the ending scan line of the cursor.}
+
+procedure SetCursorSize(Startline, EndLine : Byte);
+  {-Sets the cursor's starting and ending scan lines.}
+
+procedure NormalCursor;
+  {-Set normal scan lines for cursor based on current video mode}
+
+procedure FatCursor;
+  {-Set larger scan lines for cursor based on current video mode}
+
+procedure BlockCursor;
+  {-Set scan lines for a block cursor}
+
+procedure HiddenCursor;
+  {-Hide the cursor}
+
+function ReadCharAtCursor : Char;
+  {-Returns character at the current cursor location on the selected page.}
+
+function ReadAttrAtCursor : Byte;
+  {-Returns attribute at the current cursor location on the selected page.}
+
+procedure GetCursorState(var XY, ScanLines : Word);
+  {-Return the current position and size of the cursor}
+
+procedure RestoreCursorState(XY, ScanLines : Word);
+  {-Reset the cursor to a position and size saved with GetCursorState}
+
+procedure FastWriteWindow(St : string; Row, Col, Attr : Byte);
+  {-Write a string using window-relative coordinates}
+
+procedure FastText(St : string; Row, Col : Byte);
+  {-Write St at Row,Col without changing the underlying video attribute.}
+
+procedure FastTextWindow(St : string; Row, Col : Byte);
+  {-Write St at window Row,Col without changing the underlying video attribute.}
+
+procedure FastVert(St : string; Row, Col, Attr : Byte);
+  {-Write St vertically at Row,Col in Attr (video attribute)}
+
+procedure FastVertWindow(St : string; Row, Col, Attr : Byte);
+  {-Write a string vertically using window-relative coordinates}
+
+procedure FastFill(Number : Word; Ch : Char; Row, Col, Attr : Byte);
+  {-Fill Number chs at Row,Col in Attr (video attribute) without snow}
+
+procedure FastFillWindow(Number : Word; Ch : Char; Row, Col, Attr : Byte);
+  {-Fill Number chs at window Row,Col in Attr (video attribute) without snow}
+
+procedure FastCenter(St : string; Row, Attr : Byte);
+  {-Write St centered on window Row in Attr (video attribute) without snow}
+
+procedure FastFlush(St : string; Row, Attr : Byte);
+  {-Write St flush right on window Row in Attr (video attribute) without snow}
+
+procedure FastRead(Number, Row, Col : Byte; var St : string);
+  {-Read Number characters from the screen into St starting at Row,Col}
+
+procedure FastReadWindow(Number, Row, Col : Byte; var St : string);
+  {-Read Number characters from the screen into St starting at window Row,Col}
+
+procedure ReadAttribute(Number, Row, Col : Byte; var St : string);
+  {-Read Number attributes from the screen into St starting at Row,Col}
+
+procedure ReadAttributeWindow(Number, Row, Col : Byte; var St : string);
+  {-Read Number attributes from the screen into St starting at window Row,Col}
+
+procedure WriteAttribute(St : String; Row, Col : Byte);
+  {-Write string of attributes St at Row,Col without changing characters}
+
+procedure WriteAttributeWindow(St : String; Row, Col : Byte);
+  {-Write string of attributes St at window Row,Col without changing characters}
+
+procedure ChangeAttribute(Number : Word; Row, Col, Attr : Byte);
+  {-Change Number video attributes to Attr starting at Row,Col}
+
+procedure ChangeAttributeWindow(Number : Word; Row, Col, Attr : Byte);
+  {-Change Number video attributes to Attr starting at window Row,Col}
+
+procedure MoveScreen(var Source, Dest; Length : Word);
+  {-Move Length words from Source to Dest without snow}
+
+procedure FlexWrite(St : string; Row, Col : Byte; var FAttrs : FlexAttrs);
+  {-Write St at Row,Col with flexible color handling}
+
+procedure FlexWriteWindow(St : string; Row, Col : Byte; var FAttrs : FlexAttrs);
+  {-Write a string flexibly using window-relative coordinates.}
+
+function SaveWindow(XLow, YLow, XHigh, YHigh : Byte; Allocate : Boolean;
+                    var Covers : Pointer) : Boolean;
+  {-Allocate buffer space if requested and save window contents}
+
+procedure RestoreWindow(XLow, YLow, XHigh, YHigh : Byte;
+                        Deallocate : Boolean; var Covers : Pointer);
+  {-Restore screen contents and deallocate buffer space if requested}
+
+procedure StoreWindowCoordinates(var WC : WindowCoordinates);
+  {-Store the window coordinates for the active window}
+
+procedure RestoreWindowCoordinates(WC : WindowCoordinates);
+  {-Restore previously saved window coordinates}
+
+function PackWindow(XLow, YLow, XHigh, YHigh : Byte) : PackedWindowPtr;
+  {-Return a pointer to a packed window, or nil if not enough memory}
+
+procedure DispPackedWindow(PWP : PackedWindowPtr);
+  {-Display the packed window pointed to by PWP}
+
+procedure DispPackedWindowAt(PWP : PackedWindowPtr; Row, Col : Byte);
+ {-Display the packed window pointed to by PWP at Row,Col. If necessary,
+   the coordinates are adjusted to allow it to fit on the screen.}
+
+procedure MapPackedWindowColors(PWP : PackedWindowPtr);
+ {-Map the colors in a packed window for improved appearance on mono/B&W
+   displays}
+
+procedure DisposePackedWindow(var PWP : PackedWindowPtr);
+  {-Dispose of a packed window, setting PWP to nil on exit}
+
+procedure WritePackedWindow(PWP : PackedWindowPtr; FName : string);
+ {-Store the packed window pointed to by PWP in FName}
+
+function ReadPackedWindow(FName : string) : PackedWindowPtr;
+ {-Read the packed window stored in FName into memory}
+
+function CreateLibrary(var F : file; Name : string;
+                       Entries : Byte) : DirectoryPtr;
+ {-Create a library with the specified # of directory entries}
+
+function OpenLibrary(var F : file; Name : string) : DirectoryPtr;
+ {-Open the specified library and return a pointer to its directory}
+
+procedure CloseLibrary(var F : file; var DP : DirectoryPtr);
+  {-Close library F and deallocate its directory}
+
+procedure PackLibrary(LName : string);
+ {-Pack a library to remove deleted entries.}
+
+procedure AddWindowToLibrary(PWP : PackedWindowPtr; var F : file;
+                             DP : DirectoryPtr; WinName : LibName);
+ {-Add a packed window to the specified library}
+
+function ReadWindowFromLibrary(var F : file; DP : DirectoryPtr;
+                               WinName : LibName) : PackedWindowPtr;
+ {-Read a packed window from a library}
+
+procedure DeleteWindowFromLibrary(var F : file; DP : DirectoryPtr;
+                                  WinName : LibName);
+ {-Delete a packed window from the specified library}
+
+function MapColor(c : Byte) : Byte;
+  {-Map a video attribute for visibility on mono/bw displays}
+
+procedure SetBlink(On : Boolean);
+  {-Enable text mode attribute blinking if On is True}
+
+procedure SetCrtBorder(Attr : Byte);
+  {-Set border to background color if card type and mode allow}
+
+function Font8x8Selected : Boolean;
+  {-Return True if EGA or VGA is active and in 8x8 font}
+
+procedure SelectFont8x8(On : Boolean);
+  {-Toggle 8x8 font on or off}
+
+function HercPresent : Boolean;
+  {-Return true if a Hercules graphics card is present}
+
+procedure SwitchInColorCard(ColorOn : Boolean);
+  {-Activate or deactivate colors on a Hercules InColor card}
+
+function HercGraphicsMode : Boolean;
+  {-Return True if a Hercules card is in graphics mode}
+
+function HercModeTestWorks : Boolean;
+  {-Return True if HercGraphicsMode will work}
+
+procedure SetHercMode(GraphMode : Boolean; GraphPage : Byte);
+ {-Set Hercules card to graphics mode or text mode, and activate specified
+   graphics page (if switching to graphics mode).}
+
+function ReadKeyWord : Word;
+ {-Waits for keypress, then returns scan and character codes together}
+
+function CheckKbd(var KeyCode : Word) : Boolean;
+  {-Returns True (and the key codes) if a keystroke is waiting}
+
+function KbdFlags : Byte;
+  {-Returns keyboard status flags as a bit-coded byte}
+
+procedure StuffKey(W : Word);
+  {-Stuff one key into the keyboard buffer}
+
+procedure StuffString(S : string);
+  {-Stuff the contents of S into the keyboard buffer}
+
+procedure ReInitCrt;
+ {-Reinitialize CRT unit's internal variables. For TSR's or programs with
+   DOS shells. May reset: CurrentMode, ScreenWidth, ScreenHeight,
+   WindMin/WindMax, CurrentPage, CurrentDisplay, CheckSnow, and VideoSegment.}
+
 
 {Forwarders to CRT}
 
@@ -255,6 +538,376 @@ begin
   Y:=ScreenY;
 end;
 
+
+function GetCrtMode : Byte;
+ {-Get the current video mode. Also reinitializes internal variables. May
+   reset: CurrentMode, ScreenWidth, ScreenHeight, CurrentPage, and
+   VideoSegment.}
+begin
+end;
+
+procedure GotoXYAbs(X, Y : Byte);
+  {-Move cursor to column X, row Y. No error checking done.}
+begin
+end;
+
+procedure SetVisiblePage(PageNum : Byte);
+  {-Set current video page}
+begin
+end;
+
+procedure ScrollWindowUp(XLo, YLo, XHi, YHi, Lines : Byte);
+  {-Scrolls the designated window up the specified number of lines.}
+begin
+end;
+
+procedure ScrollWindowDown(XLo, YLo, XHi, YHi, Lines : Byte);
+  {-Scrolls the designated window down the specified number of lines.}
+begin
+end;
+
+function CursorTypeSL : Word;
+  {-Returns a word. High byte has starting scan line, low byte has ending.}
+begin
+end;
+
+function CursorStartLine : Byte;
+  {-Returns the starting scan line of the cursor}
+begin
+end;
+
+function CursorEndLine : Byte;
+  {-Returns the ending scan line of the cursor.}
+begin
+end;
+
+procedure SetCursorSize(Startline, EndLine : Byte);
+  {-Sets the cursor's starting and ending scan lines.}
+begin
+end;
+
+procedure NormalCursor;
+  {-Set normal scan lines for cursor based on current video mode}
+begin
+end;
+
+procedure FatCursor;
+  {-Set larger scan lines for cursor based on current video mode}
+begin
+end;
+
+procedure BlockCursor;
+  {-Set scan lines for a block cursor}
+begin
+end;
+
+procedure HiddenCursor;
+  {-Hide the cursor}
+begin
+end;
+
+function ReadCharAtCursor : Char;
+  {-Returns character at the current cursor location on the selected page.}
+begin
+end;
+
+function ReadAttrAtCursor : Byte;
+  {-Returns attribute at the current cursor location on the selected page.}
+begin
+end;
+
+procedure GetCursorState(var XY, ScanLines : Word);
+  {-Return the current position and size of the cursor}
+begin
+end;
+
+procedure RestoreCursorState(XY, ScanLines : Word);
+  {-Reset the cursor to a position and size saved with GetCursorState}
+begin
+end;
+
+procedure FastWriteWindow(St : string; Row, Col, Attr : Byte);
+  {-Write a string using window-relative coordinates}
+begin
+end;
+
+procedure FastText(St : string; Row, Col : Byte);
+  {-Write St at Row,Col without changing the underlying video attribute.}
+begin
+end;
+
+procedure FastTextWindow(St : string; Row, Col : Byte);
+  {-Write St at window Row,Col without changing the underlying video attribute.}
+begin
+end;
+
+procedure FastVert(St : string; Row, Col, Attr : Byte);
+  {-Write St vertically at Row,Col in Attr (video attribute)}
+begin
+end;
+
+procedure FastVertWindow(St : string; Row, Col, Attr : Byte);
+  {-Write a string vertically using window-relative coordinates}
+begin
+end;
+
+procedure FastFill(Number : Word; Ch : Char; Row, Col, Attr : Byte);
+  {-Fill Number chs at Row,Col in Attr (video attribute) without snow}
+begin
+end;
+
+procedure FastFillWindow(Number : Word; Ch : Char; Row, Col, Attr : Byte);
+  {-Fill Number chs at window Row,Col in Attr (video attribute) without snow}
+begin
+end;
+
+procedure FastCenter(St : string; Row, Attr : Byte);
+  {-Write St centered on window Row in Attr (video attribute) without snow}
+begin
+end;
+
+procedure FastFlush(St : string; Row, Attr : Byte);
+  {-Write St flush right on window Row in Attr (video attribute) without snow}
+begin
+end;
+
+procedure FastRead(Number, Row, Col : Byte; var St : string);
+  {-Read Number characters from the screen into St starting at Row,Col}
+begin
+end;
+
+procedure FastReadWindow(Number, Row, Col : Byte; var St : string);
+  {-Read Number characters from the screen into St starting at window Row,Col}
+begin
+end;
+
+procedure ReadAttribute(Number, Row, Col : Byte; var St : string);
+  {-Read Number attributes from the screen into St starting at Row,Col}
+begin
+end;
+
+procedure ReadAttributeWindow(Number, Row, Col : Byte; var St : string);
+  {-Read Number attributes from the screen into St starting at window Row,Col}
+begin
+end;
+
+procedure WriteAttribute(St : String; Row, Col : Byte);
+  {-Write string of attributes St at Row,Col without changing characters}
+begin
+end;
+
+procedure WriteAttributeWindow(St : String; Row, Col : Byte);
+  {-Write string of attributes St at window Row,Col without changing characters}
+begin
+end;
+
+procedure ChangeAttribute(Number : Word; Row, Col, Attr : Byte);
+  {-Change Number video attributes to Attr starting at Row,Col}
+begin
+end;
+
+procedure ChangeAttributeWindow(Number : Word; Row, Col, Attr : Byte);
+  {-Change Number video attributes to Attr starting at window Row,Col}
+begin
+end;
+
+procedure MoveScreen(var Source, Dest; Length : Word);
+  {-Move Length words from Source to Dest without snow}
+begin
+end;
+
+procedure FlexWrite(St : string; Row, Col : Byte; var FAttrs : FlexAttrs);
+  {-Write St at Row,Col with flexible color handling}
+begin
+end;
+
+procedure FlexWriteWindow(St : string; Row, Col : Byte; var FAttrs : FlexAttrs);
+  {-Write a string flexibly using window-relative coordinates.}
+begin
+end;
+
+function SaveWindow(XLow, YLow, XHigh, YHigh : Byte; Allocate : Boolean;
+                    var Covers : Pointer) : Boolean;
+  {-Allocate buffer space if requested and save window contents}
+begin
+end;
+
+procedure RestoreWindow(XLow, YLow, XHigh, YHigh : Byte;
+                        Deallocate : Boolean; var Covers : Pointer);
+  {-Restore screen contents and deallocate buffer space if requested}
+begin
+end;
+
+procedure StoreWindowCoordinates(var WC : WindowCoordinates);
+  {-Store the window coordinates for the active window}
+begin
+end;
+
+procedure RestoreWindowCoordinates(WC : WindowCoordinates);
+  {-Restore previously saved window coordinates}
+begin
+end;
+
+function PackWindow(XLow, YLow, XHigh, YHigh : Byte) : PackedWindowPtr;
+  {-Return a pointer to a packed window, or nil if not enough memory}
+begin
+end;
+
+procedure DispPackedWindow(PWP : PackedWindowPtr);
+  {-Display the packed window pointed to by PWP}
+begin
+end;
+
+procedure DispPackedWindowAt(PWP : PackedWindowPtr; Row, Col : Byte);
+ {-Display the packed window pointed to by PWP at Row,Col. If necessary,
+   the coordinates are adjusted to allow it to fit on the screen.}
+begin
+end;
+
+procedure MapPackedWindowColors(PWP : PackedWindowPtr);
+ {-Map the colors in a packed window for improved appearance on mono/B&W
+   displays}
+begin
+end;
+
+procedure DisposePackedWindow(var PWP : PackedWindowPtr);
+  {-Dispose of a packed window, setting PWP to nil on exit}
+begin
+end;
+
+procedure WritePackedWindow(PWP : PackedWindowPtr; FName : string);
+ {-Store the packed window pointed to by PWP in FName}
+begin
+end;
+
+function ReadPackedWindow(FName : string) : PackedWindowPtr;
+ {-Read the packed window stored in FName into memory}
+begin
+end;
+
+function CreateLibrary(var F : file; Name : string;
+                       Entries : Byte) : DirectoryPtr;
+ {-Create a library with the specified # of directory entries}
+begin
+end;
+
+function OpenLibrary(var F : file; Name : string) : DirectoryPtr;
+ {-Open the specified library and return a pointer to its directory}
+begin
+end;
+
+procedure CloseLibrary(var F : file; var DP : DirectoryPtr);
+  {-Close library F and deallocate its directory}
+begin
+end;
+
+procedure PackLibrary(LName : string);
+ {-Pack a library to remove deleted entries.}
+begin
+end;
+
+procedure AddWindowToLibrary(PWP : PackedWindowPtr; var F : file;
+                             DP : DirectoryPtr; WinName : LibName);
+ {-Add a packed window to the specified library}
+begin
+end;
+
+function ReadWindowFromLibrary(var F : file; DP : DirectoryPtr;
+                               WinName : LibName) : PackedWindowPtr;
+ {-Read a packed window from a library}
+begin
+end;
+
+procedure DeleteWindowFromLibrary(var F : file; DP : DirectoryPtr;
+                                  WinName : LibName);
+ {-Delete a packed window from the specified library}
+begin
+end;
+
+function MapColor(c : Byte) : Byte;
+  {-Map a video attribute for visibility on mono/bw displays}
+begin
+end;
+
+procedure SetBlink(On : Boolean);
+  {-Enable text mode attribute blinking if On is True}
+begin
+end;
+
+procedure SetCrtBorder(Attr : Byte);
+  {-Set border to background color if card type and mode allow}
+begin
+end;
+
+function Font8x8Selected : Boolean;
+  {-Return True if EGA or VGA is active and in 8x8 font}
+begin
+end;
+
+procedure SelectFont8x8(On : Boolean);
+  {-Toggle 8x8 font on or off}
+begin
+end;
+
+function HercPresent : Boolean;
+  {-Return true if a Hercules graphics card is present}
+begin
+end;
+
+procedure SwitchInColorCard(ColorOn : Boolean);
+  {-Activate or deactivate colors on a Hercules InColor card}
+begin
+end;
+
+function HercGraphicsMode : Boolean;
+  {-Return True if a Hercules card is in graphics mode}
+begin
+end;
+
+function HercModeTestWorks : Boolean;
+  {-Return True if HercGraphicsMode will work}
+begin
+end;
+
+procedure SetHercMode(GraphMode : Boolean; GraphPage : Byte);
+ {-Set Hercules card to graphics mode or text mode, and activate specified
+   graphics page (if switching to graphics mode).}
+begin
+end;
+
+function ReadKeyWord : Word;
+ {-Waits for keypress, then returns scan and character codes together}
+begin
+end;
+
+function CheckKbd(var KeyCode : Word) : Boolean;
+  {-Returns True (and the key codes) if a keystroke is waiting}
+begin
+end;
+
+function KbdFlags : Byte;
+  {-Returns keyboard status flags as a bit-coded byte}
+begin
+end;
+
+procedure StuffKey(W : Word);
+  {-Stuff one key into the keyboard buffer}
+begin
+end;
+
+procedure StuffString(S : string);
+  {-Stuff the contents of S into the keyboard buffer}
+begin
+end;
+
+procedure ReInitCrt;
+ {-Reinitialize CRT unit's internal variables. For TSR's or programs with
+   DOS shells. May reset: CurrentMode, ScreenWidth, ScreenHeight,
+   WindMin/WindMax, CurrentPage, CurrentDisplay, CheckSnow, and VideoSegment.}
+begin
+end;
+
+{Forwarders to Crt}
 procedure ClrScr;
 begin
   Crt.ClrScr;
