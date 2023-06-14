@@ -455,14 +455,13 @@ procedure FastWrite(St : string; Row, Col, Attr : Byte);
   {-Write St at Row,Col in Attr (video attribute) without snow}
 var
   oldTextAttr: Byte;
-  OldWindMin, OldWindMax: Word;
   OldX, OldY: Byte;
+  WC: WindowCoordinates;
 begin
   OldTextAttr:=TextAttr;
-  OldWindMin:=WindMin;
-  OldWindMax:=WindMax;
   OldX:=WhereX;
   OldY:=WhereY;
+  StoreWindowCoordinates(WC);
 
   TextAttr:=Attr;
   Window(1, 1, ScreenWidth, ScreenHeight);
@@ -470,7 +469,7 @@ begin
   Write(St);
 
   TextAttr:=OldTextAttr;
-  Window(Lo(OldWindMin)+1, Hi(OldWindMin)+1, Lo(OldWindMax)+1, Hi(OldWindMax)+1);
+  RestoreWindowCoordinates(WC);
   GoToXY(OldX, OldY);
 end;
 
@@ -480,7 +479,7 @@ procedure FrameWindow(LeftCol, TopRow, RightCol, BotRow, FAttr, HAttr : Byte;
 var
   i: byte;
 begin
-  CursorOff;
+  HiddenCursor;
   FastWrite(FrameChars[ULeft], TopRow, LeftCol, FAttr);
   for i:=LeftCol+1 to RightCol-1 do FastWrite(FrameChars[Horiz], TopRow, i, FAttr);
   FastWrite(FrameChars[URight], TopRow, RightCol, FAttr);
@@ -604,6 +603,7 @@ end;
 procedure HiddenCursor;
   {-Hide the cursor}
 begin
+  CursorOff;
 end;
 
 function ReadCharAtCursor : Char;
@@ -714,6 +714,7 @@ end;
 procedure MoveScreen(var Source, Dest; Length : Word);
   {-Move Length words from Source to Dest without snow}
 begin
+  Move(Source, Dest, Length);
 end;
 
 procedure FlexWrite(St : string; Row, Col : Byte; var FAttrs : FlexAttrs);
@@ -741,11 +742,16 @@ end;
 procedure StoreWindowCoordinates(var WC : WindowCoordinates);
   {-Store the window coordinates for the active window}
 begin
+  WC.XL := Lo(WindMin)+1;
+  WC.YL := Hi(WindMin)+1;
+  WC.XH := Lo(WindMax)+1;
+  WC.YH := Hi(WindMax)+1;
 end;
 
 procedure RestoreWindowCoordinates(WC : WindowCoordinates);
   {-Restore previously saved window coordinates}
 begin
+  Window(WC.XL, WC.YL, WC.XH, WC.YH);
 end;
 
 function PackWindow(XLow, YLow, XHigh, YHigh : Byte) : PackedWindowPtr;
