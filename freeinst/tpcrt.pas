@@ -573,11 +573,13 @@ end;
 function CursorStartLine : Byte;
   {-Returns the starting scan line of the cursor}
 begin
+  Result:=Hi(CursorTypeSL);
 end;
 
 function CursorEndLine : Byte;
   {-Returns the ending scan line of the cursor.}
 begin
+  Result:=Lo(CursorTypeSL);
 end;
 
 procedure SetCursorSize(Startline, EndLine : Byte);
@@ -588,16 +590,19 @@ end;
 procedure NormalCursor;
   {-Set normal scan lines for cursor based on current video mode}
 begin
+  SetCursorSize($05, $07);
 end;
 
 procedure FatCursor;
   {-Set larger scan lines for cursor based on current video mode}
 begin
+  SetCursorSize($03, $07);
 end;
 
 procedure BlockCursor;
   {-Set scan lines for a block cursor}
 begin
+  SetCursorSize($00, $07);
 end;
 
 procedure HiddenCursor;
@@ -619,16 +624,21 @@ end;
 procedure GetCursorState(var XY, ScanLines : Word);
   {-Return the current position and size of the cursor}
 begin
+  XY:=WhereXY;
+  ScanLines:=CursorTypeSL;
 end;
 
 procedure RestoreCursorState(XY, ScanLines : Word);
   {-Reset the cursor to a position and size saved with GetCursorState}
 begin
+  SetCursorSize(Hi(ScanLines), Lo(ScanLines));
+  GotoXYAbs(Lo(XY), Hi(XY));
 end;
 
 procedure FastWriteWindow(St : string; Row, Col, Attr : Byte);
   {-Write a string using window-relative coordinates}
 begin
+  FastWrite(St, Row+Hi(WindMin), Col+Lo(WindMin), Attr);
 end;
 
 procedure FastText(St : string; Row, Col : Byte);
@@ -639,6 +649,7 @@ end;
 procedure FastTextWindow(St : string; Row, Col : Byte);
   {-Write St at window Row,Col without changing the underlying video attribute.}
 begin
+  FastText(St, Row+Hi(WindMin), Col+Lo(WindMin));
 end;
 
 procedure FastVert(St : string; Row, Col, Attr : Byte);
@@ -649,6 +660,7 @@ end;
 procedure FastVertWindow(St : string; Row, Col, Attr : Byte);
   {-Write a string vertically using window-relative coordinates}
 begin
+  FastVert(St, Row+Hi(WindMin), Col+Lo(WindMin), Attr);
 end;
 
 procedure FastFill(Number : Word; Ch : Char; Row, Col, Attr : Byte);
@@ -659,6 +671,7 @@ end;
 procedure FastFillWindow(Number : Word; Ch : Char; Row, Col, Attr : Byte);
   {-Fill Number chs at window Row,Col in Attr (video attribute) without snow}
 begin
+  FastFill(Number, Ch, Row+Hi(WindMin), Col+Lo(WindMin), Attr);
 end;
 
 procedure FastCenter(St : string; Row, Attr : Byte);
@@ -679,6 +692,7 @@ end;
 procedure FastReadWindow(Number, Row, Col : Byte; var St : string);
   {-Read Number characters from the screen into St starting at window Row,Col}
 begin
+  FastRead(Number, Row+Hi(WindMin), Col+Lo(WindMin), St);
 end;
 
 procedure ReadAttribute(Number, Row, Col : Byte; var St : string);
@@ -689,6 +703,7 @@ end;
 procedure ReadAttributeWindow(Number, Row, Col : Byte; var St : string);
   {-Read Number attributes from the screen into St starting at window Row,Col}
 begin
+  ReadAttribute(Number, Row+Hi(WindMin), Col+Lo(WindMin), St);
 end;
 
 procedure WriteAttribute(St : String; Row, Col : Byte);
@@ -699,6 +714,7 @@ end;
 procedure WriteAttributeWindow(St : String; Row, Col : Byte);
   {-Write string of attributes St at window Row,Col without changing characters}
 begin
+  WriteAttribute(St, Row+Hi(WindMin), Col+Lo(WindMin));
 end;
 
 procedure ChangeAttribute(Number : Word; Row, Col, Attr : Byte);
@@ -709,6 +725,7 @@ end;
 procedure ChangeAttributeWindow(Number : Word; Row, Col, Attr : Byte);
   {-Change Number video attributes to Attr starting at window Row,Col}
 begin
+  ChangeAttribute(Number, Row+Hi(WindMin), Col+Lo(WindMin), Attr);
 end;
 
 procedure MoveScreen(var Source, Dest; Length : Word);
@@ -725,6 +742,7 @@ end;
 procedure FlexWriteWindow(St : string; Row, Col : Byte; var FAttrs : FlexAttrs);
   {-Write a string flexibly using window-relative coordinates.}
 begin
+  FlexWrite(St, Row+Hi(WindMin), Col+Lo(WindMin), FAttrs);
 end;
 
 function SaveWindow(XLow, YLow, XHigh, YHigh : Byte; Allocate : Boolean;
@@ -858,6 +876,7 @@ end;
 function HercPresent : Boolean;
   {-Return true if a Hercules graphics card is present}
 begin
+  Result:=False;
 end;
 
 procedure SwitchInColorCard(ColorOn : Boolean);
@@ -884,6 +903,7 @@ end;
 function ReadKeyWord : Word;
  {-Waits for keypress, then returns scan and character codes together}
 begin
+  
 end;
 
 function CheckKbd(var KeyCode : Word) : Boolean;
