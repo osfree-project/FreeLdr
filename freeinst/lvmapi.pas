@@ -49,6 +49,9 @@ uses
 {$endif}
   StrUtils, SysUtils;
 
+var
+  Terminology: Byte;
+
 const
   LVM_ENGINE_NO_ERROR                          = 0;
   LVM_ENGINE_OUT_OF_MEMORY                     = 1;
@@ -208,6 +211,7 @@ function LvmGetDriveHandle(Drive_Number: CARDINAL32): ADDRESS;
 function LvmGetDriveStatus(Drive_Handle: ADDRESS): TDriveInformation;
 function LvmGetPartitionType(PartitionType: BYTE): String;
 function LvmGetPartitionStatus(PartitionStatus: BYTE): String;
+procedure LvmSetTerms(Term: Byte);
 
 
 implementation
@@ -308,7 +312,7 @@ begin
       with DrivesArray[Length(DrivesArray)-1] do
       begin
         DriveHandle:=ADDRESS(hdl);
-        DriveNumber:=Drive+1; // @todo DriveNumber is 1 based in LVM?
+        DriveNumber:=Drive+1;
 
         ZeroMemory(@PropQuery, SizeOf(PropQuery));
         ZeroMemory(@DeviceDescriptor, SizeOf(DeviceDescriptor));
@@ -514,14 +518,27 @@ begin
 {$ifdef OS2}
   Result:=TDriveInformation(Get_Drive_Status(Drive_Handle, @Res));
 {$endif}
+{$ifdef Windows}
+  {$if 0}
+  TDriveInformation=record
+    Total_Available_Sectors: CARDINAL32;        // The number of sectors on the disk which are not currently assigned to a partition.
+    Largest_Free_Block_Of_Sectors: CARDINAL32;  // The number of sectors in the largest contiguous block of available sectors.
+    Corrupt_Partition_Table: BOOLEAN;           // If TRUE, then the partitioning information found on the drive is incorrect!
+    Unusable: BOOLEAN;                          // If TRUE, the drive's MBR is not accessible and the drive can not be partitioned.
+    IO_Error: BOOLEAN;                          // If TRUE, then the last I/O operation on this drive failed!
+    Is_Big_Floppy: BOOLEAN;                     // If TRUE, then the drive is a PRM formatted as a big floppy (i.e. the old style removable media support).
+    Drive_Name: Array[0..DISK_NAME_SIZE-1] of Char; // User assigned name for this disk drive.
+  end;
+  {$endif}
+{$endif}
 end;
 
 Function LvmGetPartitionType(PartitionType: BYTE): String;
 begin
   Case PartitionType of
     0: Result:='Free Space';
-    1: Result:='LVM';
-    2: Result:='Compatibility';
+    1: Result:=IfThen(Terminology=2, 'Advanced' ,'LVM');
+    2: Result:=IfThen(Terminology=2, 'Standard', 'Compatibility');
   end;
 end;
 
@@ -534,4 +551,11 @@ begin
   end;
 end;
 
+procedure LvmSetTerms(Term: Byte);
+begin
+  Terminology:=Term;
+end;
+
+begin
+  Terminology:=2;
 end.
