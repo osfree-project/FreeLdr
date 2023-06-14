@@ -129,6 +129,10 @@ procedure HighVideo;
 
 implementation
 
+{$ifdef windows}
+uses windows;
+{$endif}
+
 procedure SetFrameChars(Vertical, Horizontal, LowerRight, UpperRight,
                         LowerLeft, UpperLeft : Char);
   {-Sets the frame characters to be used on subsequent FrameWindow calls.}
@@ -293,5 +297,15 @@ procedure SetUseACP(F: Boolean);
 begin
   Crt.SetUseACP(F);
 end;
+
+var
+  ConsoleInfo: TConsoleScreenBufferinfo;
+
+begin
+  if GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), ConsoleInfo) then
+  begin
+    ScreenHeight:=ConsoleInfo.dwSize.Y;
+    ScreenWidth:=ConsoleInfo.dwSize.X;
+  end;
 {$endif}
 end.
