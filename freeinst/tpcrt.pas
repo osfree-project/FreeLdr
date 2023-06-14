@@ -29,6 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 }
 
+{$MODE ObjFPC}
+
 unit tpcrt;
   {-Extended CRT unit. Implements TurboPower Turbo Professional TPCRT intarface.}
 
@@ -411,6 +413,19 @@ var
 procedure SetSafeCPSwitching(F: Boolean);
 procedure SetUseACP(F: Boolean);
   {$ENDIF}
+
+var
+  CurrentMode : Byte absolute LastMode; {current video mode}
+
+{for backward compatibility with old TPCRT}
+var
+  CurrentWidth : Word absolute ScreenWidth; {current width of display}
+
+Function GetCurrentHeight: Word;  
+Procedure SetCurrentHeight(Value: Word);  
+
+Property  
+  CurrentHeight: Word Read GetCurrentHeight Write SetCurrentHeight; {current height of display - 1}
 
 procedure ClrScr;
 procedure TextBackground(C: byte);
@@ -1033,6 +1048,16 @@ end;
 procedure TextMode (Mode: word);
 begin
   Crt.TextMode(Mode);
+end;
+
+Function GetCurrentHeight: Word;  
+begin
+  Result:=ScreenHeight-1;
+end;
+
+Procedure SetCurrentHeight(Value: Word);  
+begin
+  ScreenHeight:=Value+1;
 end;
 
 {$ifdef windows}
