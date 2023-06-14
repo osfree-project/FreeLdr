@@ -38,6 +38,15 @@ uses
   crt;
 
 const
+  {video mode constants}
+  BW40 = 0;
+  CO40 = 1;
+  C40 = CO40;
+  BW80 = 2;
+  CO80 = 3;
+  C80 = CO80;
+  Mono = 7;
+  Font8x8 = 256;
   {color constants}
   Black = 0;
   Blue = 1;
@@ -99,7 +108,13 @@ procedure WhereXYdirect(var X, Y : Byte);
   {-Read the current position of the cursor directly from the CRT controller}
 
 {Forwarders to CRT}
+
 var
+  CheckBreak: boolean absolute Crt.CheckBreak;
+  CheckEOF: boolean absolute Crt.CheckEOF;
+  DirectVideo: boolean absolute Crt.DirectVideo;
+  CheckSnow: boolean absolute Crt.CheckSnow;
+  LastMode : word absolute Crt.LastMode;
   TextAttr: byte absolute Crt.TextAttr;
   WindMin: Word absolute Crt.WindMin;
   WindMax: Word absolute Crt.WindMax;
