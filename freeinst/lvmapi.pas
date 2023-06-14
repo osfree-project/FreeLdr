@@ -289,71 +289,70 @@ begin
   Result:=Res;
 {$endif}
 {$ifdef Windows}
-          for Drive:=0 to 15 do
-          begin
-        // create a handle to the device
-        s := '\\.\PhysicalDrive' + IntToStr(Drive);
-        hdl:=CreateFileA(PChar(s),
-                                        GENERIC_READ or GENERIC_WRITE,
-                                        FILE_SHARE_READ or FILE_SHARE_WRITE,
-                                        nil,
-                                        OPEN_EXISTING,
-                                        0,
-                                        0);
+  for Drive:=0 to 15 do
+  begin
+    // create a handle to the device
+    s := '\\.\PhysicalDrive' + IntToStr(Drive);
+    hdl:=CreateFileA(PChar(s),
+         GENERIC_READ or GENERIC_WRITE,
+         FILE_SHARE_READ or FILE_SHARE_WRITE,
+         nil,
+         OPEN_EXISTING,
+         0,
+         0);
+  
+  
+    if hdl <> INVALID_HANDLE_VALUE then
+    begin
+      SetLength(DrivesArray, Length(DrivesArray)+1);
+      with DrivesArray[Length(DrivesArray)-1] do
+      begin
+        DriveHandle:=ADDRESS(hdl);
+        DriveNumber:=Drive+1; // @todo DriveNumber is 1 based in LVM?
 
+        ZeroMemory(@PropQuery, SizeOf(PropQuery));
+        ZeroMemory(@DeviceDescriptor, SizeOf(DeviceDescriptor));
 
-        if hdl <> INVALID_HANDLE_VALUE then
+        DeviceDescriptor.Size := SizeOf(DeviceDescriptor);
+
+        Status := DeviceIoControl(
+                                hdl,
+                                IOCTL_STORAGE_QUERY_PROPERTY,
+                                @PropQuery,
+                                SizeOf(PropQuery),
+                                @DeviceDescriptor,
+                                DeviceDescriptor.Size,
+                                Returned,
+                                nil
+                        );
+
+        if not Status then RaiseLastOSError;
+
+        if DeviceDescriptor.SerialNumberOffset <> 0 then
         begin
-                SetLength(DrivesArray, Length(DrivesArray)+1);
-                with DrivesArray[Length(DrivesArray)-1] do
-                begin
-                DriveHandle:=ADDRESS(hdl);
-                DriveNumber:=Drive+1; // @todo DriveNumber is 1 based in LVM?
-
-                ZeroMemory(@PropQuery, SizeOf(PropQuery));
-                ZeroMemory(@DeviceDescriptor, SizeOf(DeviceDescriptor));
-
-                DeviceDescriptor.Size := SizeOf(DeviceDescriptor);
-
-                Status := DeviceIoControl(
-                                        hdl,
-                                        IOCTL_STORAGE_QUERY_PROPERTY,
-                                        @PropQuery,
-                                        SizeOf(PropQuery),
-                                        @DeviceDescriptor,
-                                        DeviceDescriptor.Size,
-                                        Returned,
-                                        nil
-                                );
-
-                if not Status then RaiseLastOSError;
-
-                if DeviceDescriptor.SerialNumberOffset <> 0 then
-                begin
-                        PCh := @PCharArray(@DeviceDescriptor)^[DeviceDescriptor.SerialNumberOffset];
-                        DriveSerialNumber:=HexToBin(PCh, PChar(@Result), SizeOf(Cardinal));
-                end;
-                DriveIsPRM:=DeviceDescriptor.RemovableMedia;
-
-                Status := DeviceIoControl(hdl,
-                                                IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-                                                nil,
-                                                0,
-                                                @buffer,
-                                                sizeof(buffer),
-                                                returned,
-                                                nil);
-
-                if not Status then RaiseLastOSError;
-
-                //DriveSize:=buffer.disksize/buffer.geometry.BytesPerSector;
-                SectorsPerTrack:=buffer.geometry.SectorsPerTrack;
-                CylinderCount:=buffer.geometry.cylinders;
-                HeadsPerCylinder:=buffer.geometry.TracksPerCylinder;
-
-                end;
+          PCh := @PCharArray(@DeviceDescriptor)^[DeviceDescriptor.SerialNumberOffset];
+          DriveSerialNumber:=HexToBin(PCh, PChar(@Result), SizeOf(Cardinal));
         end;
+        DriveIsPRM:=DeviceDescriptor.RemovableMedia;
 
+        Status := DeviceIoControl(hdl,
+                                        IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
+                                        nil,
+                                        0,
+                                        @buffer,
+                                        sizeof(buffer),
+                                        returned,
+                                        nil);
+
+        if not Status then RaiseLastOSError;
+
+        //DriveSize:=buffer.disksize/buffer.geometry.BytesPerSector;
+        SectorsPerTrack:=buffer.geometry.SectorsPerTrack;
+        CylinderCount:=buffer.geometry.cylinders;
+        HeadsPerCylinder:=buffer.geometry.TracksPerCylinder;
+  
+      end;
+    end;
   end;
 {$endif}
   result:=LVM_ENGINE_NO_ERROR;
@@ -429,7 +428,6 @@ begin
     PartitionsArray[i]:=TPartitionInformation(PIA.Partition_Array[i]);
   end;
   Result:=PartitionsArray;
-//writeln('ok');
 {$endif}
 end;
 

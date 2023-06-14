@@ -124,8 +124,16 @@ function WhereY: byte;
 procedure ClrEOL;
 function ReadKey: Char;
 procedure Delay(MS: Word);
+procedure LowVideo;
 procedure HighVideo;
-
+procedure NormVideo;
+procedure Sound(Hz: Word);
+procedure NoSound;
+procedure InsLine;
+procedure DelLine;
+procedure AssignCrt(var F: Text);
+function KeyPressed: Boolean;
+procedure TextMode (Mode: word);
 
 implementation
 
@@ -285,6 +293,52 @@ end;
 procedure HighVideo;
 begin
   Crt.HighVideo;
+end;
+
+procedure LowVideo;
+begin
+  Crt.LowVideo;
+end;
+
+procedure NormVideo;
+begin
+  Crt.NormVideo;
+end;
+
+
+procedure Sound(Hz: Word);
+begin
+  Crt.Sound(Hz);
+end;
+
+procedure NoSound;
+begin
+  Crt.NoSound;
+end;
+
+procedure InsLine;
+begin
+  Crt.InsLine;
+end;
+
+procedure DelLine;
+begin
+  Crt.DelLine;
+end;
+
+procedure AssignCrt(var F: Text);
+begin
+  Crt.AssignCrt(F);
+end;
+
+function KeyPressed: Boolean;
+begin
+  Result:=Crt.KeyPressed;
+end;
+
+procedure TextMode (Mode: word);
+begin
+  Crt.TextMode(Mode);
 end;
 
 {$ifdef windows}
