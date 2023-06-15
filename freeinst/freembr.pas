@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 unit freembr;
 
+{FreeLDR Master Boot Record Management}
+
 interface
 
 Procedure ManageMBR;
@@ -139,7 +141,6 @@ begin
 End;
 
 // Install MBR for FreeLDR
-
 Procedure Install_MBR;
 VAR
   Drive:        Byte;
@@ -232,21 +233,21 @@ Var
   SelectKey: Char;
   MK: MenuKey;
 begin
-    MBRMenu:=NewMenu([], nil);
-    SubMenu(20, 7, 25, Vertical, SingleFrameChars, MenuColors, '');
-    MenuItem(' 1: Install new MBR for FreeLDR', 1, 2, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
-    MenuItem(' 2: Backup MBR sector', 2, 2, Ord(MBackupMBR), 'Make back up copy of Master Boot Record from selected drive');
-    MenuItem(' 3: Restore MBR sector', 3, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
-    MenuItem(' 0: Exit', 4, 2, Ord(MExit), 'Exit FreeLDR installer');
-    ResetMenu(MBRMenu);
-    MK:=MenuChoice(MBRMenu, SelectKey);
-    repeat
-      case MK of
-        Ord(MInstallMBR): Install_MBR;
-        Ord(MBackUpMBR): Backup_MBR_sector;
-        Ord(MRestoreMBR): Restore_MBR_Sector;
-      end;
-    until MK=Ord(Mexit);
+  MBRMenu:=NewMenu([], nil);
+  SubMenu(20, 7, 25, Vertical, SingleFrameChars, MenuColors, '');
+  MenuItem(' 1: Install new MBR', 1, 2, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
+  MenuItem(' 2: Backup MBR sector', 2, 2, Ord(MBackupMBR), 'Make back up copy of Master Boot Record from selected drive');
+  MenuItem(' 3: Restore MBR sector', 3, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
+  MenuItem(' 0: Exit', 4, 2, Ord(MExit), 'Exit FreeLDR installer');
+  ResetMenu(MBRMenu);
+  MK:=MenuChoice(MBRMenu, SelectKey);
+  repeat
+    case MK of
+      Ord(MInstallMBR): Install_MBR;
+      Ord(MBackUpMBR): Backup_MBR_sector;
+      Ord(MRestoreMBR): Restore_MBR_Sector;
+    end;
+  until MK=Ord(Mexit);
 end;
 
 end.

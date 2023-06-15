@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 unit MBR;
 
+{API to handle MBR}
+
 interface
 
 procedure ReadMBRSector(DriveNum: Byte; var MBRBuffer);
@@ -43,21 +45,6 @@ implementation
 uses
   SysUtils,
   LVMAPI;
-
-const
-  BIOSDISK_READ               = $0;
-  BIOSDISK_WRITE              = $1;
-
-  METHOD_BUFFERED             = $00000000;
-  FILE_ANY_ACCESS             = $00000000;
-  FILE_DEVICE_FILE_SYSTEM     = $00000009;
-
-  FSCTL_LOCK_VOLUME           = (FILE_DEVICE_FILE_SYSTEM shl 16) or
-                                (FILE_ANY_ACCESS shl 14) or
-                                ($6 shl 2) or METHOD_BUFFERED;
-  FSCTL_UNLOCK_VOLUME         = (FILE_DEVICE_FILE_SYSTEM shl 16) or
-                                (FILE_ANY_ACCESS shl 14) or
-                                ($7 shl 2) or METHOD_BUFFERED;
 
 Type
   TPartition=record
@@ -91,7 +78,7 @@ Type
     Seconds: Byte;
     Minutes: Byte;
     Hours: Byte;
-    Bootstrap2: Array[0..215] of Byte;          { First Bootstrap code area }
+    Bootstrap2: Array[0..215] of Byte;          { Second Bootstrap code area }
     DiskSignature: DWord;
     Protect: Word;
     Partitions: Array[1..4] of TPartition;      { Partitions }
@@ -103,7 +90,21 @@ Type
     NEWLDRSignature: array[1..6] of char;
   end;
 
-Type
+  TMBRAAP=record                                // @todo not finished yet
+    Bootstrap: array[0..427] of byte;           { Bootstrap code area }
+    AAPSignature: Word;                         { AAP Signature }
+  end;
+
+  TMBRSpeedStor=record                          // @todo not finished yet
+    Bootstrap: array[0..379] of byte;           { Bootstrap code area }
+    NECSignature: Word;                         { NEC Signature }
+  end;
+
+  TMBROntrack=record                            // @todo not finished yet
+    Bootstrap: array[0..251] of byte;           { Bootstrap code area }
+    DMSignature: Word;                          { DM Signature }
+  end;
+
   TGPTHeader=packed record
     MBR: TMBRGeneric;
     Signature: Array[0..7] of Char;
@@ -111,46 +112,52 @@ Type
 
 function isGPT(DriveNum: Byte): Boolean;
 var
-        Buffer: ARRAY [0..1023] of Byte;
-        GPT: TGPTHeader absolute buffer;
+  Buffer: ARRAY [0..1023] of Byte;
+  GPT: TGPTHeader absolute buffer;
 begin
-        LvmReadSectors(DriveNum, 0, 2, Buffer);
-        Result:=GPT.Signature='EFI PART';
-end;
-
-function MBRDetect(DriveNum: Byte): MBRType;
-var
-        Buffer:  ARRAY [0..511] of Byte;
-        MBR: TMBRGeneric absolute buffer;
-        NEWLDRMBR: TMBRNewLdr absolute buffer;
-begin
-        Result:=MBRInvalid;
-        LvmReadSectors(DriveNum, 0, 1, Buffer);
-        If MBR.Signature<>$aa55 then exit;      { No MBR signature found }
-        if (isGPT(DriveNum)) then
-        begin
-                Result:=MBRProtective;
-                // @todo Detect MBRHybrid here
-        end else begin
-                if NEWLDRMBR.NEWLDRSignature='NEWLDR' then
-                begin
-                        Result:=MBRNEWLDR;
-                end else begin
-                        // @todo AAP
-                        // @todo SpeedStor/NEC
-                        // @todo Ontrack
-                end;
-        end;
+  LvmReadSectors(DriveNum, 0, 2, Buffer);
+  Result:=GPT.Signature='EFI PART';
 end;
 
 procedure ReadMBRSector(DriveNum: Byte; var MBRBuffer);
 begin
-        LvmReadSectors(DriveNum, 0, 1, MBRBuffer);
+  LvmReadSectors(DriveNum, 0, 1, MBRBuffer);
 end;
 
 procedure WriteMBRSector(DriveNum: Byte; var MBRBuffer);
 begin
-        LvmWriteSectors(DriveNum, 0, 1, MBRBuffer);
+  LvmWriteSectors(DriveNum, 0, 1, MBRBuffer);
+end;
+
+function MBRDetect(DriveNum: Byte): MBRType;
+var
+  Buffer: ARRAY [0..511] of Byte;
+  MBR: TMBRGeneric absolute buffer;
+  NEWLDRMBR: TMBRNewLdr absolute buffer;
+  AAP: TMBRAAP absolute buffer;
+  NEC: TMBRSpeedStor absolute buffer;
+  Ontrack: TMBROntrack absolute buffer;
+begin
+  Result:=MBRInvalid;
+  ReadMBRSector(DriveNum, Buffer);
+  If MBR.Signature=$AA55 then                   { MBR signature found }
+  begin
+    // @todo Detect MBRModern
+    if (isGPT(DriveNum)) then
+    begin
+      Result:=MBRProtective;
+      // @todo Detect MBRHybrid here
+    end else begin
+      if NEWLDRMBR.NEWLDRSignature='NEWLDR' then
+      begin
+        Result:=MBRNEWLDR;
+      end else begin
+        If AAP.AAPSignature=$5678 then Result:=MBRAAP;
+        If NEC.NECSignature=$A55A then Result:=MBRSpeedStor;
+        If Ontrack.DMSignature=$55AA then Result:=MBROntrack;
+      end;
+    end;
+  end;
 end;
 
 end.
