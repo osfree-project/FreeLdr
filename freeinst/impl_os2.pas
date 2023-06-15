@@ -16,9 +16,9 @@ procedure Close_Disk(DevHandle: Hfile);
 procedure Lock_Disk(DevHandle: Hfile);
 procedure Unlock_Disk(DevHandle: Hfile);
 
-procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
+//procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
 procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
-procedure Backup_MBR_Sector;
+//procedure Backup_MBR_Sector;
 procedure Restore_MBR_Sector;
 
 procedure Fat32FSctrl(DevHandle: Hfile);
@@ -158,10 +158,12 @@ if rc <> No_Error then
   end;
 end;
 
+{$if 0}
 procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
 begin
   MBR_Sector(DriveNum, MBRBuffer, PDSK_READPHYSTRACK)
 end;
+{$endif}
 
 procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
 begin
@@ -169,6 +171,7 @@ begin
 end;
 
 // Backup MBR sector to a file
+{$if 0}
 Procedure Backup_MBR_sector;
 
 Var
@@ -199,6 +202,7 @@ MBR_Sector(drive,sector0,PDSK_READPHYSTRACK);
 Writeln('Press Enter to continue...');
 Readln;
 End;
+{$endif}
 
 // Restore MBRsector from a file
 Procedure Restore_MBR_sector;

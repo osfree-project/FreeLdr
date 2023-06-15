@@ -25,7 +25,7 @@ procedure Unlock_Disk(DevHandle: Hfile);
 
 procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
 procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
-procedure Backup_MBR_Sector;
+//procedure Backup_MBR_Sector;
 procedure Restore_MBR_Sector;
 
 implementation
@@ -128,6 +128,7 @@ begin
 end;
 
 // Backup MBR sector to a file
+{$if 0}
 Procedure Backup_MBR_sector;
 
 Var
@@ -146,6 +147,7 @@ Begin
   Writeln('Press Enter to continue...');
   Readln;
 End;
+{$endif}
 
 // Restore MBRsector from a file
 Procedure Restore_MBR_sector;

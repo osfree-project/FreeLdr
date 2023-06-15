@@ -19,9 +19,9 @@ procedure Close_Disk(DevHandle: Hfile);
 procedure Lock_Disk(DevHandle: Hfile);
 procedure Unlock_Disk(DevHandle: Hfile);
 
-procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
+//procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
 procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
-procedure Backup_MBR_Sector;
+//procedure Backup_MBR_Sector;
 procedure Restore_MBR_Sector;
 
 function AbsRead(drive: AnsiString; lba, len, addr: LongInt) : LongInt;
@@ -344,10 +344,12 @@ begin
   FileClose(FH);
 end;
 
+{$if 0
 procedure Read_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
 begin
   MBR_Sector(DriveNum, MBRBuffer, BIOSDISK_READ)
 end;
+{$endif}
 
 procedure Write_MBR_Sector(DriveNum: AnsiString; var MBRBuffer);
 begin
@@ -355,6 +357,7 @@ begin
 end;
 
 // Backup MBR sector to a file
+{$if 0}
 procedure Backup_MBR_sector;
 var
   usNumDrives : Word;
@@ -374,6 +377,7 @@ begin
   writeln('Press Enter to continue...');
   readln;
 end;
+{$endif}
 
 // Restore MBRsector from a file
 procedure Restore_MBR_sector;
