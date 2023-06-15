@@ -175,7 +175,7 @@ Begin
   Begin
     FileRead( FH, FreeMBR, Sector0Len );
     FileClose( FH );
-    StrMove( @FreeMBR[$1b8], @Sector0[$1b8], 72 );    {Rewrite Partition Table and NTFS sig from HD}
+    Move(Sector0[$1b8], FreeMBR[$1b8], 72);           {Rewrite Partition Table and NTFS sig from HD}
     FreeMBR[$1bc] := chr(BootNr);                     {Insert partition bootnumber}
     FreeMBR[$1bd] := chr(BootDrv);                    {Insert disk boot number}
     Sector0 := FreeMBR;
