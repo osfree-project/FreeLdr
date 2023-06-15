@@ -26,8 +26,6 @@ procedure Close_Disk(DevHandle: Hfile);
 procedure Lock_Disk(DevHandle: Hfile);
 procedure Unlock_Disk(DevHandle: Hfile);
 
-procedure Restore_MBR_Sector;
-
 implementation
 
 uses
@@ -84,40 +82,6 @@ begin
   end;
   GetNumDrives := usDrives;
 end;
-
-
-// Restore MBRsector from a file
-Procedure Restore_MBR_sector;
-
-Var
-  usNumDrives : UShort; // Data return buffer
-  Drive         : Char;
-  Filename:     String;
-  FH:   Integer;
-Begin
-  usNumDrives := GetNumDrives;
-
-  Writeln('Windows reports ',usNumDrives,' partitionable disk(s) available.');
-  Write('Input disknumber for MBR backup (1..',usNumDrives,'): ');
-  Readln(Drive);
-  Writeln('Enter name of the bootsectorfile to restore');
-  Write('(Default is MBR_sect.000): ');
-  Readln(filename);
-
-  If filename = '' Then Filename := 'MBR_sect.000';
-  FH := FileOpen( filename, fmOpenRead OR fmShareDenyNone);
-  If FH > 0 Then
-  Begin
-    Writeln('Restoring ',filename, 'to bootsector');
-    FileRead( FH, Sector0, Sector0Len );
-    FileClose( FH );
-    WriteMBRSector(byte(drive),sector0);
-  End
-  Else
-    Writeln('Sorry, the file ',filename,' returned error ',-FH);
-  Writeln('Press Enter to continue...');
-  Readln;
-End;
 
 Procedure Read_Disk(devhandle: Hfile; VAR buf; buf_len: Ulong);
 Var

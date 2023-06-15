@@ -100,97 +100,6 @@ const
     $03                      {ShadowColor}
     );
 
-procedure ShowOK;
-const
-  Colors : MenuColorArray =
-  ($17,                      {FrameColor}
-    $4E,                     {HeaderColor}
-    WhiteOnBlue,             {BodyColor}
-    BlueOnLtGray,            {SelectColor}
-    YellowOnBlue,            {HiliteColor}
-    WhiteOnBlack,            {HelpColor}
-    $17,                     {DisabledColor}
-    $03                      {ShadowColor}
-    );
-
-type
-  MakeCommands =             {codes returned by each menu selection}
-  (Mnone,                    {no command}
-   Mok);
-var
-  W: WindowPtr;
-  YN: Menu;
-  SelectKey: Char;
-Begin
-  MakeWindow(W, 17, 8, 63, 14, True, True, True, YellowOnBlue, WhiteOnBlue, YellowOnBlue, ' Information ');
-  DisplayWindow(W);
-  Writeln;
-  Writeln(' Choose OK to continue ');
-
-  YN:=NewMenu([], nil);
-  SubMenu(37, 12, 0, Vertical, LotusFrame, Colors, '');
-  MenuItem(' OK ', 1, 2, Ord(Mok), '');
-  ResetMenu(YN);
-  MenuChoice(YN, SelectKey);
-
-  DisposeWindow(W);
-
-  // @todo temporary solution until implement KillWindow or EraseTopWindow
-  Window(1,5,80,25);
-  TextBackground(White);
-  TextColor(Black);
-  ClrScr;
-end;
-
-procedure ShowWarning;
-const
-  Colors : MenuColorArray =
-  (RedOnRed,                 {FrameColor}
-    $4E,                     {HeaderColor}
-    WhiteOnBlack,            {BodyColor}
-    BlackOnLtGray,           {SelectColor}
-    YellowOnBlack,           {HiliteColor}
-    WhiteOnBlack,            {HelpColor}
-    $17,                     {DisabledColor}
-    $03                      {ShadowColor}
-    );
-
-type
-  MakeCommands =             {codes returned by each menu selection}
-  (Mnone,                    {no command}
-   Myes,                    {main menu root}
-   Mno);              {select item to edit}
-var
-  W: WindowPtr;
-  YN: Menu;
-  SelectKey: Char;
-Begin
-  MakeWindow(W, 17, 5, 63, 19, True, True, True, WhiteOnBlack, LtRedOnBlack, LtRedOnBlack, ' WARNING! ');
-  DisplayWindow(W);
-  Writeln;
-  Writeln(' This is experimental software that');
-  Writeln(' can *COMPLETELY* destroy your harddisk(s).');
-  Writeln;
-  Writeln(' Don''t use this software, unless you have');
-  WriteLn(' a full system backup of all your HDs');
-  WriteLn;
-  WriteLn(' Are you sure, you want to continue?');
-
-  YN:=NewMenu([], nil);
-  SubMenu(37, 15, 0, Vertical, LotusFrame, Colors, '');
-  MenuItem(' Yes ', 1, 2, Ord(Myes), '');
-  MenuItem(' No ', 2, 2, Ord(Mno), '');
-  ResetMenu(YN);
-  if MenuChoice(YN, SelectKey)=ord(Mno) then Halt(9);;
-
-  DisposeWindow(W);
-
-  // @todo temporary solution until implement KillWindow or EraseTopWindow
-  Window(1,5,80,25);
-  TextBackground(White);
-  TextColor(Black);
-  ClrScr;
-end;
 
 function SelectDisk(): Byte;
 var
@@ -217,19 +126,6 @@ begin
   ResetMenu(YN);
   Result:=MenuChoice(YN, SelectKey);
 end;
-
-// Backup MBR sector to a file
-Procedure Backup_MBR_sector;
-var
-  F: integer;
-begin
-  ReadMBRSector(SelectDisk,sector0);
-  F:=FileCreate('MBR.BIN');
-  FileWrite(F, sector0, SizeOf(sector0));
-  FileClose(F);
-  ShowOK;
-End;
-
 
 // Rewrite start of preldr0 file acording to filesystem needs
 Procedure Fix_Preldr0(DriveT:TdriveType);
@@ -939,36 +835,6 @@ Begin
   End;
 End;
 
-Procedure ManageMBR;
-type
-  MakeCommands =             {codes returned by each menu selection}
-  (Mnone,                    {no command}
-   MInstallMBR,                    {main menu root}
-   MBackUpMBR,
-   MRestoreMBR,
-   MExit
-  );
-Var
-  MBRMenu: Menu;
-  SelectKey: Char;
-  MK: MenuKey;
-begin
-    MBRMenu:=NewMenu([], nil);
-    SubMenu(20, 7, 25, Vertical, SingleFrameChars, MenuColors, '');
-    MenuItem(' 1: Install new MBR for FreeLDR', 1, 2, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
-    MenuItem(' 2: Backup MBR sector', 2, 2, Ord(MBackupMBR), 'Make back up copy of Master Boot Record from selected drive');
-    MenuItem(' 3: Restore MBR sector', 3, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
-    MenuItem(' 0: Exit', 4, 2, Ord(MExit), 'Exit FreeLDR installer');
-    ResetMenu(MBRMenu);
-    MK:=MenuChoice(MBRMenu, SelectKey);
-    repeat
-      case MK of
-        Ord(MInstallMBR): Install_MBR;
-        Ord(MBackUpMBR): Backup_MBR_sector;
-        Ord(MRestoreMBR): Restore_MBR_Sector;
-      end;
-    until MK=Ord(Mexit);
-end;
 
 Procedure ManageFreeLDR;
 type

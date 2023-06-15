@@ -35,7 +35,7 @@ unit freembr;
 
 interface
 
-Procedure Install_MBR;
+Procedure ManageMBR;
 
 implementation
 
@@ -126,6 +126,18 @@ begin
   If Result>lp+2 then Result:=Result+lp;
 end;
 
+// Backup MBR sector to a file
+Procedure Backup_MBR_sector;
+var
+  F: integer;
+begin
+  ReadMBRSector(SelectDisk,sector0);
+  F:=FileCreate('MBR.BIN');
+  FileWrite(F, sector0, SizeOf(sector0));
+  FileClose(F);
+  ShowOK;
+End;
+
 // Install MBR for FreeLDR
 
 Procedure Install_MBR;
@@ -176,5 +188,65 @@ Begin
     Halt(1);
   End;
 End;
+
+// Restore MBRsector from a file
+Procedure Restore_MBR_sector;
+
+Var
+  Drive         : Byte;
+  Filename:     String;
+  FH:   Integer;
+Begin
+  Drive:=SelectDisk;
+
+  Writeln('Enter name of the bootsectorfile to restore');
+  Write('(Default is MBR_sect.000): ');
+  Readln(filename);
+
+  If filename = '' Then Filename := 'MBR_sect.000';
+  FH := FileOpen( filename, fmOpenRead OR fmShareDenyNone);
+  If FH > 0 Then
+  Begin
+    Writeln('Restoring ',filename, 'to bootsector');
+    FileRead( FH, Sector0, Sector0Len );
+    FileClose( FH );
+    WriteMBRSector(drive,sector0);
+  End
+  Else
+    Writeln('Sorry, the file ',filename,' returned error ',-FH);
+  Writeln('Press Enter to continue...');
+  Readln;
+End;
+
+Procedure ManageMBR;
+type
+  MakeCommands =             {codes returned by each menu selection}
+  (Mnone,                    {no command}
+   MInstallMBR,                    {main menu root}
+   MBackUpMBR,
+   MRestoreMBR,
+   MExit
+  );
+Var
+  MBRMenu: Menu;
+  SelectKey: Char;
+  MK: MenuKey;
+begin
+    MBRMenu:=NewMenu([], nil);
+    SubMenu(20, 7, 25, Vertical, SingleFrameChars, MenuColors, '');
+    MenuItem(' 1: Install new MBR for FreeLDR', 1, 2, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
+    MenuItem(' 2: Backup MBR sector', 2, 2, Ord(MBackupMBR), 'Make back up copy of Master Boot Record from selected drive');
+    MenuItem(' 3: Restore MBR sector', 3, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
+    MenuItem(' 0: Exit', 4, 2, Ord(MExit), 'Exit FreeLDR installer');
+    ResetMenu(MBRMenu);
+    MK:=MenuChoice(MBRMenu, SelectKey);
+    repeat
+      case MK of
+        Ord(MInstallMBR): Install_MBR;
+        Ord(MBackUpMBR): Backup_MBR_sector;
+        Ord(MRestoreMBR): Restore_MBR_Sector;
+      end;
+    until MK=Ord(Mexit);
+end;
 
 end.
