@@ -203,7 +203,7 @@ function LvmOpenEngine(Ignore_CHS: Boolean): CARDINAL32;
 procedure LvmCloseEngine();
 function LvmCommitChanges(): CARDINAL32;
 function LvmGetDriveControlData: TDrivesArray;
-function LvmGetPartitions(Handle: ADDRESS): TPartitionsArray;
+function LvmGetPartitions(Hndl: ADDRESS): TPartitionsArray;
 function LvmFreeEngineMemory(LVMObject: ADDRESS): CARDINAL32;
 function LvmReadSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Read: CARDINAL32; var Buffer): CARDINAL32;
 function LvmWriteSectors(Drive_Number: CARDINAL32; Starting_Sector: LBA; Sectors_To_Write: CARDINAL32; var Buffer): CARDINAL32;
@@ -222,7 +222,9 @@ var
 {$ifdef Windows}
 const
   IOCTL_STORAGE_QUERY_PROPERTY = $2D1400;
-
+  IOCTL_DISK_GET_PARTITION_INFO_EX   = $0070048;
+  IOCTL_DISK_GET_DRIVE_LAYOUT = $0007400c;
+  
 type
 STORAGE_PROPERTY_QUERY = packed record
   PropertyId: DWORD;
@@ -416,20 +418,129 @@ end;
 var
   PartitionsArray: TPartitionsArray;
 
-function LvmGetPartitions(Handle: ADDRESS): TPartitionsArray;
+function LvmGetPartitions(Hndl: ADDRESS): TPartitionsArray;
 {$ifdef OS2}
 var
   Res: CARDINAL32;
   PIA: Partition_Information_Array;
   i: integer;
 {$endif}
+{$ifdef WINDOWS}
+type
+   MyDRIVE_LAYOUT_INFORMATION = record
+          PartitionCount : DWORD;
+          Signature : DWORD;
+          PartitionEntry : array[0..15] of PARTITION_INFORMATION;
+       end;
+
+var
+  buffer: MyDRIVE_LAYOUT_INFORMATION;
+  Returned: Cardinal;
+  Status: LongBool;
+  i:integer;
+{$endif}
 begin
 {$ifdef OS2}
-  PIA:=Get_Partitions(Handle, @Res);
+  PIA:=Get_Partitions(Hndl, @Res);
   SetLength(PartitionsArray, PIA.Count);
   For i:=Low(PartitionsArray) to High(PartitionsArray) do
   begin
     PartitionsArray[i]:=TPartitionInformation(PIA.Partition_Array[i]);
+  end;
+  Result:=PartitionsArray;
+{$endif}
+{$ifdef WINDOWS}
+    Status := DeviceIoControl(HANDLE(Hndl),
+                                    IOCTL_DISK_GET_DRIVE_LAYOUT,
+                                    nil,
+                                    0,
+                                    @buffer,
+                                    sizeof(buffer),
+                                    returned,
+                                    nil);
+
+    if not Status then RaiseLastOSError;
+	
+	SetLength(PartitionsArray, buffer.PartitionCount);
+{$if 0}
+    Partition_Handle: ADDRESS;                      // The handle used to perform operations on this partition.
+    Volume_Handle: ADDRESS;                         // If this partition is part of a volume, this will be the handle of
+                                                    //the volume.  If this partition is NOT part of a volume, then this
+                                                    //handle will be 0.
+    Drive_Handle: ADDRESS;                          // The handle for the drive this partition resides on.
+    Partition_Serial_Number: DoubleWord;            // The serial number assigned to this partition.
+    Partition_Start: CARDINAL32;                    // The LBA of the first sector of the partition.
+    True_Partition_Size: CARDINAL32;                // The total number of sectors comprising the partition.
+    Usable_Partition_Size: CARDINAL32;              // The size of the partition as reported to the IFSM.  This is the
+                                                    //size of the partition less any LVM overhead.
+    Boot_Limit: CARDINAL32;                         // The maximum number of sectors from this block of free space that can be used to
+                                                    //create a bootable partition if you allocate from the beginning of the block of
+                                                    //free space.
+    Spanned_Volume: BOOLEAN;                        // TRUE if this partition is part of a multi-partition volume.
+    Primary_Partition: BOOLEAN;                     // True or False.  Any non-zero value here indicates that
+                                                    //this partition is a primary partition.  Zero here indicates
+                                                    //that this partition is a "logical drive" - i.e. it resides
+                                                    //inside of an extended partition.
+    Active_Flag: BYTE;                              // 80 = Partition is marked as being active.
+                                                    // 0 = Partition is not active.
+    OS_Flag: BYTE;                                  // This field is from the partition table.  It is known as the
+                                                    //OS flag, the Partition Type Field, Filesystem Type, and
+                                                    //various other names.
+
+                                                    //Values of interest
+
+                                                    //If this field is: (values are in hex)
+
+                                                    //07 = The partition is a compatibility partition formatted for use
+                                                    //with an installable filesystem, such as HPFS or JFS.
+                                                    //00 = Unformatted partition
+                                                    //01 = FAT12 filesystem is in use on this partition.
+                                                    //04 = FAT16 filesystem is in use on this partition.
+                                                    //0A = OS/2 Boot Manager Partition
+                                                    //35 = LVM partition
+                                                    //84 = OS/2 FAT16 partition which has been relabeled by Boot Manager to "Hide" it.
+    Partition_Type: BYTE;                           // 0 = Free Space
+                                                    //1 = LVM Partition (Part of an LVM Volume.)
+                                                    //2 = Compatibility Partition
+                                                    //All other values are reserved for future use.
+    Partition_Status: BYTE;                         // 0 = Free Space
+                                                    //1 = In Use - i.e. already assigned to a volume.
+                                                    //2 = Available - i.e. not currently assigned to a volume.
+    On_Boot_Manager_Menu: BOOLEAN;                  // Set to TRUE if this partition is not part of a Volume yet is on the Boot Manager Menu.
+    Reserved: BYTE;                                 // Alignment.
+    Volume_Drive_Letter: char;                      // The drive letter assigned to the volume that this partition is a part of.
+    Drive_Name: Array[0..DISK_NAME_SIZE-1] of char;   // User assigned name for this disk drive.
+    File_System_Name: Array[0..FILESYSTEM_NAME_SIZE-1] of char;// The name of the filesystem in use on this partition, if it is known.
+    Partition_Name: Array[0..PARTITION_NAME_SIZE-1] of char;   // The user assigned name for this partition.
+    Volume_Name: Array[0..VOLUME_NAME_SIZE-1] of char;         // If this partition is part of a volume, then this will be the
+                                                             //name of the volume that this partition is a part of.  If this
+                                                             //record represents free space, then the Volume_Name will be
+                                                             //"FREE SPACE xx", where xx is a unique numeric ID generated by
+                                                             //LVM.DLL.  Otherwise it will be an empty string.
+{$endif}
+
+  For i:=Low(PartitionsArray) to High(PartitionsArray) do
+  begin
+    with PartitionsArray[i] do
+	begin
+	  OS_Flag:=buffer.PartitionEntry[i].PartitionType;
+      if OS_Flag=0 then 
+	  begin
+	    Partition_Type:=0;
+	    Partition_Status:=0;
+	  end else begin
+        Partition_Type:=2;
+        Partition_Status:=1;
+      end;
+	  Partition_Start:=buffer.PartitionEntry[i].StartingOffset.LowPart;
+	  Active_Flag:=byte(buffer.PartitionEntry[i].BootIndicator)*$80;
+	  True_Partition_Size:=Trunc(buffer.PartitionEntry[i].PartitionLength.QuadPart/512);
+	  Boot_Limit:=buffer.PartitionEntry[i].HiddenSectors;
+//	  PartitionNumber: DWORD;
+          //RecognizedPartition : BYTEBOOL;
+          //RewritePartition    : BYTEBOOL;
+
+	end;
   end;
   Result:=PartitionsArray;
 {$endif}

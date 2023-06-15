@@ -65,6 +65,7 @@ Uses
 {$ENDIF}
               Strings, SysUtils, StrUtils, Dos,
               tpcrt, tpwindow, colordef, tpmenu, // Turbo Professional
+			  msgbox,
               lvmapi, // OS/2 Logical Volume Manager
               mbr, // MBR
               FreeMBR; // FreeMBR
@@ -183,24 +184,6 @@ Begin
   if MenuChoice(YN, SelectKey)=ord(Mno) then Halt(9);;
 
   DisposeWindow(W);
-
-  // @todo temporary solution until implement KillWindow or EraseTopWindow
-  Window(1,5,80,25);
-  TextBackground(White);
-  TextColor(Black);
-  ClrScr;
-end;
-
-procedure ShowError(Text: String);
-var
-  W: WindowPtr;
-Begin
-  MakeWindow(W, 17, 7, 63, 13, True, True, True, WhiteOnBlack, LtRedOnBlack, LtRedOnBlack, ' WARNING! ');
-  DisplayWindow(W);
-  Writeln;
-  Writeln(Text);
-  DisposeWindow(W);
-  ReadLn;
 
   // @todo temporary solution until implement KillWindow or EraseTopWindow
   Window(1,5,80,25);
