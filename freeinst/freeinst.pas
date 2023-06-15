@@ -956,6 +956,78 @@ Begin
   End;
 End;
 
+Procedure ManageMBR;
+type
+  MakeCommands =             {codes returned by each menu selection}
+  (Mnone,                    {no command}
+   MInstallMBR,                    {main menu root}
+   MBackUpMBR,
+   MRestoreMBR,
+   MExit
+  );
+Var
+  MBRMenu: Menu;
+  SelectKey: Char;
+  MK: MenuKey;
+begin
+    MBRMenu:=NewMenu([], nil);
+    SubMenu(20, 7, 25, Vertical, SingleFrameChars, MenuColors, '');
+    MenuItem(' 1: Install new MBR for FreeLDR', 1, 2, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
+    MenuItem(' 2: Backup MBR sector', 2, 2, Ord(MBackupMBR), 'Make back up copy of Master Boot Record from selected drive');
+    MenuItem(' 3: Restore MBR sector', 3, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
+    MenuItem(' 0: Exit', 4, 2, Ord(MExit), 'Exit FreeLDR installer');
+    ResetMenu(MBRMenu);
+    MK:=MenuChoice(MBRMenu, SelectKey);
+    repeat
+      case MK of
+        Ord(MInstallMBR): Install_MBR;
+        Ord(MBackUpMBR): Backup_MBR_sector;
+        Ord(MRestoreMBR): Restore_MBR_Sector;
+      end;
+    until MK=Ord(Mexit);
+end;
+
+Procedure ManageFreeLDR;
+type
+  MakeCommands =             {codes returned by each menu selection}
+  (Mnone,                    {no command}
+   MInstallFreeLdr,
+   MBackupBootBlock,
+   MRestoreBootBlock,
+   MChangePartition,
+   MExit
+  );
+var
+  LDRMenu: Menu;
+  SelectKey: Char;
+  MK: MenuKey;
+begin
+    ClrScr;
+    Writeln;
+    Writeln('                   Partition ',drive1,' is selected for install');
+    Writeln;
+
+    SelectDrive;              // Ask user which drive to install to.
+
+    LDRMenu:=NewMenu([], nil);
+    SubMenu(20, 7, 25, Vertical, SingleFrameChars, MenuColors, '');
+    MenuItem(' 1: Install FreeLDR on a partition', 1, 2, Ord(MInstallFreeLdr), 'Install FreeLDR on selected partition');
+    MenuItem(' 2: Backup a BootBlock', 2, 2, Ord(MBackUpBootBlock), 'Make back up copy of Master Boot Record from selected partition');
+    MenuItem(' 3: Restore a BootBlock', 3, 2, Ord(MRestoreBootBlock), 'Restore a BootBlock from backup file');
+    MenuItem(' 4: Change partition', 4, 2, Ord(MChangePartition), 'Change partition to install, backup or restore to');
+    MenuItem(' 0: Exit', 8, 2, Ord(MExit), 'Exit FreeLDR installer');
+    ResetMenu(LDRMenu);
+
+    repeat
+      MK:=MenuChoice(LDRMenu, SelectKey);
+      case MK of
+        Ord(MInstallFreeLdr): Install_LDR;
+        Ord(MBackUpBootBlock): BackUp_BootBlock;
+        Ord(MRestoreBootBlock): Restore_Bootblock;
+        Ord(MChangePartition): SelectDrive;
+      end;
+	until MK=Ord(MExit);
+end;
 
 var
   OldExitProc: Pointer;
@@ -972,19 +1044,14 @@ end;
   *********************************************************************************************************** }
 
 type
-  MakeCommands =             {codes returned by each menu selection}
+  MMainCommands =             {codes returned by each menu selection}
   (Mnone,                    {no command}
-   MInstallMBR,                    {main menu root}
-   MInstallFreeLdr,
-   MBackUpMBR,
-   MBackupBootBlock,
-   MRestoreMBR,
-   MRestoreBootBlock,
-   MChangePartition,
+   MManageMBR,                    {main menu root}
+   MManageFreeLdr,
    MExit
   );
 var
-  YN: Menu;
+  MainMenu: Menu;
   SelectKey: Char;
   MK: MenuKey;
 Begin
@@ -1014,41 +1081,19 @@ Begin
   OldExitProc   := ExitProc;
   ExitProc      := @MyExitProc;
 
-  SelectDrive;              // Ask user which drive to install to.
+  MainMenu:=NewMenu([], nil);
+  SubMenu(20, 7, 25, Vertical, SingleFrameChars, MenuColors, 'Select operations');
+  MenuItem(' 1: Manage MBR', 1, 2, Ord(MManageMBR), 'Perfom operations with Master Boot Record on selected drive');
+  MenuItem(' 2: Manage FreeLDR', 2, 2, Ord(MManageMBR), 'Perfom operations with FreeLDR on selected partition');
+  MenuItem(' 0: Exit', 3, 2, Ord(MExit), 'Exit FreeLDR installer');
+  ResetMenu(MainMenu);
 
   Repeat
-    ClrScr;
-    Writeln;
-    Writeln('                   Partition ',drive1,' is selected for install');
-    Writeln;
-    YN:=NewMenu([], nil);
-    SubMenu(20, 7, 25, Vertical, SingleFrameChars, MenuColors, '');
-    MenuItem(' 1: Install new MBR for FreeLDR', 1, 2, Ord(MInstallMBR), 'Install new Master Boot Record on selected drive');
-    MenuItem(' 2: Install FreeLDR on a partition', 2, 2, Ord(MInstallFreeLdr), 'Install FreeLDR on selected partition');
-    MenuItem(' 3: Backup MBR sector', 3, 2, Ord(MBackupMBR), 'Make back up copy of Master Boot Record from selected drive');
-    MenuItem(' 4: Backup a BootBlock', 4, 2, Ord(MBackUpBootBlock), 'Make back up copy of Master Boot Record from selected partition');
-    MenuItem(' 5: Restore MBR sector', 5, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
-    MenuItem(' 6: Restore a BootBlock', 6, 2, Ord(MRestoreBootBlock), 'Restore a BootBlock from backup file');
-    MenuItem(' 9: Change partition', 7, 2, Ord(MChangePartition), 'Change partition to install, backup or restore to');
-    MenuItem(' 0: Exit', 8, 2, Ord(MExit), 'Exit FreeLDR installer');
-    ResetMenu(YN);
-    MK:=MenuChoice(YN, SelectKey);
-    ClrScr;
-
+    MK:=MenuChoice(MainMenu, SelectKey);
     case MK of
-      Ord(MInstallMBR): Install_MBR;
-      Ord(MInstallFreeLdr): Install_LDR;
-      Ord(MBackUpMBR): Backup_MBR_sector;
-      Ord(MBackUpBootBlock): BackUp_BootBlock;
-      Ord(MRestoreMBR): Restore_MBR_Sector;
-      Ord(MRestoreBootBlock): Restore_Bootblock;
-      Ord(MChangePartition): Begin
-           SelectDrive;
-           End;
-      Ord(Mexit): break;
+      Ord(MManageMBR): ManageMBR;
+      Ord(MManageFreeLDR): ManageFreeLDR;
     end;
-    Delay(100);
-  until false;
-
+  Until MK=Ord(MExit);
 End.
 
