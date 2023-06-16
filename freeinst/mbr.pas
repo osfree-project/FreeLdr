@@ -43,12 +43,24 @@ function isGPT(DriveNum: Byte): Boolean;
 implementation
 
 uses
-  SysUtils,
   LVMAPI;
 
 Type
-  TPartition=record                             // @todo not finished yet
-    Empty: array[1..16] of Byte;
+  TCHS=record                                   // @todo not finished yet
+    Empty: array[1..3] of Byte;
+  end;
+
+  TLBA=record                                   // @todo not finished yet
+    Empty: array[1..4] of Byte;
+  end;
+
+  TPartition=record
+    PartitionStatus: Byte;                      { Status or physical drive (bit 7 set is for active or bootable }
+    FirstSectorCHS: TCHS;                       { CHS address of first absolute sector in partition }
+    PartitionType: Byte;                        { Type of partition }
+    LastSectorCHS: TCHS;                        { CHS address of last absolute sector in partition }
+    FirstSectorLBA: TLBA;                       { LBA of first absolute sector in the partition }
+    Size: DWord;                                { Number of sectors in partition }
   end;
 
 Type
@@ -86,19 +98,11 @@ Type
     Signature: Word;                            { Signature }
   end;
 
-  TAAPPartition=record                          // @todo not finished yet
-    Empty: array[1..16] of Byte;
+  TAAPPartition=record                             // @todo not finished yet
+    Empty: array[1..16] of byte;
   end;
 
-  TCHS=record                                   // @todo not finished yet
-    Empty: array[1..3] of Byte;
-  end;
-  
-  TLBA=record                                   // @todo not finished yet
-    Empty: array[1..4] of Byte;
-  end;
-  
-  TMBRNewLdr=record								// @todo Bootstrap code can start from 0x000C/0x0018/0x001E
+  TMBRNewLdr=record                             // @todo Bootstrap code can start from 0x000C/0x0018/0x001E
     JMPS: array[0..1] of byte;
     NEWLDRSignature: array[1..6] of char;       { NEWLDR Signature }
     Drive: Byte;                                { LOADER physical drive and boot flag }
@@ -181,26 +185,22 @@ var
   Ontrack: TMBROntrack absolute buffer;
   Modern: TMBRModern absolute buffer;
 begin
-  Result:=MBRInvalid;
-  ReadMBRSector(DriveNum, Buffer);
+  Result:=MBRInvalid;                           { By default no MBR found }
+  ReadMBRSector(DriveNum, Buffer);              { Read MBR from Drive }
   If MBR.Signature=$AA55 then                   { MBR signature found }
   begin
-    if (isGPT(DriveNum)) then
+    Result:=MBRGeneric;                         { Standard MBR by default }
+    if (isGPT(DriveNum)) then                   { Check is GPT presented }
     begin
-      Result:=MBRProtective;
+      Result:=MBRProtective;                    { If so, then we have or Protective or Hybrid MBR }
       // @todo Detect MBRHybrid here, seems hard to do this...
     end else begin
-      if NEWLDRMBR.NEWLDRSignature='NEWLDR' then
-      begin
-        Result:=MBRNEWLDR;
-      end else begin
-        {Modern detection is not safe, but works in most cases because Zeroes not often can be found in other MBRs.}
-        If (Modern.Zeros=0) and ((Modern.Protect=0) or (Modern.Protect=$5a5a)) then Result:=MBRModern;
-        {AAP signature can be found in NEWLDR, but we already detected NEWLDR}
-        If AAP.AAPSignature=$5678 then Result:=MBRAAP;
-        If NEC.NECSignature=$A55A then Result:=MBRSpeedStor;
-        If Ontrack.DMSignature=$55AA then Result:=MBROntrack;
-      end;
+      {Modern detection is not safe, but works in most cases because Zeroes not often can be found in other MBRs.}
+      If (Modern.Zeros=0) and ((Modern.Protect=0) or (Modern.Protect=$5a5a)) then Result:=MBRModern;  {Check for Modern MBR }
+      If NEC.NECSignature=$A55A then Result:=MBRSpeedStor;           {Check for NEC MBR }
+      If Ontrack.DMSignature=$55AA then Result:=MBROntrack;          {Check for Disk Manager MBR }
+      If AAP.AAPSignature=$5678 then Result:=MBRAAP;                 {Check for AAR MBR }
+      if NEWLDRMBR.NEWLDRSignature='NEWLDR' then Result:=MBRNEWLDR;  { Check for NEWLDR MBR }
     end;
   end;
 end;
