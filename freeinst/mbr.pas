@@ -61,7 +61,7 @@ Type
     MBRSpeedStor,       { AST/NEC, SpeedStor MBR }
     MBROntrack,         { Ontrack Disk Manager }
     MBRHybrid,          { Hybrid MBR }
-    MBRProtective       { Protective MBR }
+    MBRProtective,      { Protective MBR }
 	MBRFreeLdr          { FreeLDR MBR }
   );
 
@@ -99,11 +99,15 @@ Type
   TMBRSpeedStor=record                          // @todo not finished yet
     Bootstrap: array[0..379] of byte;           { Bootstrap code area }
     NECSignature: Word;                         { NEC Signature }
+    Partitions: Array[1..8] of TPartition;      { Partitions }
+    Signature: Word;                            { Signature }
   end;
 
-  TMBROntrack=record                            // @todo not finished yet
+  TMBROntrack=record
     Bootstrap: array[0..251] of byte;           { Bootstrap code area }
     DMSignature: Word;                          { DM Signature }
+    Partitions: Array[1..16] of TPartition;     { Partitions }
+    Signature: Word;                            { Signature }
   end;
 
   TMBRFreeLdr=record
@@ -162,7 +166,9 @@ begin
       begin
         Result:=MBRNEWLDR;
       end else begin
+        {Modern detection is not safe, but works in most cases because Zeroes not often can be found in other MBRs.}
         If (Modern.Zeros=0) and ((Modern.Protect=0) or (Modern.Protect=$5a5a)) then Result:=MBRModern;
+        {AAP signature can be found in NEWLDR, but we already detected NEWLDR}
         If AAP.AAPSignature=$5678 then Result:=MBRAAP;
         If NEC.NECSignature=$A55A then Result:=MBRSpeedStor;
         If Ontrack.DMSignature=$55AA then Result:=MBROntrack;
