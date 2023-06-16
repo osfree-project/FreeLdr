@@ -73,7 +73,7 @@ Type
 
   TMBRModern=record
     Bootstrap1: Array[0..217] of Byte;          { First Bootstrap code area }
-    Zeros: Array[0..1] of Byte;                 { Zeros }
+    Zeros: Word;                                { Zeros }
     Drive: Byte;
     Seconds: Byte;
     Minutes: Byte;
@@ -137,21 +137,22 @@ var
   AAP: TMBRAAP absolute buffer;
   NEC: TMBRSpeedStor absolute buffer;
   Ontrack: TMBROntrack absolute buffer;
+  Modern: TMBRModern absolute buffer;
 begin
   Result:=MBRInvalid;
   ReadMBRSector(DriveNum, Buffer);
   If MBR.Signature=$AA55 then                   { MBR signature found }
   begin
-    // @todo Detect MBRModern
     if (isGPT(DriveNum)) then
     begin
       Result:=MBRProtective;
-      // @todo Detect MBRHybrid here
+      // @todo Detect MBRHybrid here, seems hard to do this...
     end else begin
       if NEWLDRMBR.NEWLDRSignature='NEWLDR' then
       begin
         Result:=MBRNEWLDR;
       end else begin
+        If (Modern.Zeros=0) and ((Modern.Protect=0) or (Modern.Protect=$5a5a)) then Result:=MBRModern;
         If AAP.AAPSignature=$5678 then Result:=MBRAAP;
         If NEC.NECSignature=$A55A then Result:=MBRSpeedStor;
         If Ontrack.DMSignature=$55AA then Result:=MBROntrack;
