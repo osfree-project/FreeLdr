@@ -106,6 +106,15 @@ Type
     DMSignature: Word;                          { DM Signature }
   end;
 
+  TMBRFreeLdr=record
+    Bootstrap1: Array[0..439] of Byte;          { First Bootstrap code area }
+    DiskSignature: DWord;                       { NT Signature }
+    Chain: Byte;                                { Chain disk in INT13H format}
+    Partition: Byte;                            { Boot partition or Zero to use Active Partition}
+    Partitions: Array[1..4] of TPartition;      { Partitions }
+    Signature: Word;                            { Signature }
+  end;
+
   TGPTHeader=packed record
     MBR: TMBRGeneric;
     Signature: Array[0..7] of Char;
