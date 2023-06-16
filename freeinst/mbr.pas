@@ -62,6 +62,7 @@ Type
     MBROntrack,         { Ontrack Disk Manager }
     MBRHybrid,          { Hybrid MBR }
     MBRProtective       { Protective MBR }
+	MBRFreeLdr          { FreeLDR MBR }
   );
 
 Type
