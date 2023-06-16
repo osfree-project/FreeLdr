@@ -42,6 +42,8 @@ function isGPT(DriveNum: Byte): Boolean;
 
 implementation
 
+{$PACKRECORDS 1}
+
 uses
   LVMAPI;
 
@@ -65,16 +67,16 @@ Type
 
 Type
   MBRType=(
-    MBRInvalid,         { invalid MBR type }
-    MBRGeneric,         { standard generic MBR }
-    MBRModern,          { modern MBR }
-    MBRAAP,             { Advanced Active Partitions MBR }
-    MBRNEWLDR,          { NEWLDR MBR }
-    MBRSpeedStor,       { AST/NEC, SpeedStor MBR }
-    MBROntrack,         { Ontrack Disk Manager }
-    MBRHybrid,          { Hybrid MBR }
-    MBRProtective,      { Protective MBR }
-	MBRFreeLdr          { FreeLDR MBR }
+    MBRInvalid,                                 { invalid MBR type }
+    MBRGeneric,                                 { standard generic MBR }
+    MBRModern,                                  { modern MBR }
+    MBRAAP,                                     { Advanced Active Partitions MBR }
+    MBRNEWLDR,                                  { NEWLDR MBR }
+    MBRSpeedStor,                               { AST/NEC, SpeedStor MBR }
+    MBROntrack,                                 { Ontrack Disk Manager }
+    MBRHybrid,                                  { Hybrid MBR }
+    MBRProtective,                              { Protective MBR }
+	MBRFreeLdr                                  { FreeLDR MBR }
   );
 
 Type
@@ -92,18 +94,18 @@ Type
     Minutes: Byte;
     Hours: Byte;
     Bootstrap2: Array[0..215] of Byte;          { Second Bootstrap code area }
-    DiskSignature: DWord;
-    Protect: Word;
+    DiskSignature: DWord;                       { NT disk signature }
+    Protect: Word;                              { }
     Partitions: Array[1..4] of TPartition;      { Partitions }
     Signature: Word;                            { Signature }
   end;
 
-  TAAPPartition=record                             // @todo not finished yet
+  TAAPPartition=record                          // @todo not finished yet
     Empty: array[1..16] of byte;
   end;
 
   TMBRNewLdr=record                             // @todo Bootstrap code can start from 0x000C/0x0018/0x001E
-    JMPS: array[0..1] of byte;
+    JMPS: array[0..1] of byte;                  { JMP to Bootstrap code }
     NEWLDRSignature: array[1..6] of char;       { NEWLDR Signature }
     Drive: Byte;                                { LOADER physical drive and boot flag }
     LoaderCHS: TCHS;                            { CHS address of LOADER boot sector or image file }
@@ -151,7 +153,7 @@ Type
     Signature: Word;                            { Signature }
   end;
 
-  TGPTHeader=packed record
+  TGPTHeader=record
     MBR: TMBRGeneric;
     Signature: Array[0..7] of Char;
   end;
@@ -206,4 +208,3 @@ begin
 end;
 
 end.
-
