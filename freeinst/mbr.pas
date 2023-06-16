@@ -47,7 +47,7 @@ uses
   LVMAPI;
 
 Type
-  TPartition=record
+  TPartition=record                             // @todo not finished yet
     Empty: array[1..16] of Byte;
   end;
 
@@ -86,17 +86,45 @@ Type
     Signature: Word;                            { Signature }
   end;
 
-  TMBRNewLdr=record                             // @todo not finished yet
-    JMPS: array[0..1] of byte;
-    NEWLDRSignature: array[1..6] of char;
+  TAAPPartition=record                          // @todo not finished yet
+    Empty: array[1..16] of Byte;
   end;
 
-  TMBRAAP=record                                // @todo not finished yet
+  TCHS=record                                   // @todo not finished yet
+    Empty: array[1..3] of Byte;
+  end;
+  
+  TLBA=record                                   // @todo not finished yet
+    Empty: array[1..4] of Byte;
+  end;
+  
+  TMBRNewLdr=record								// @todo Bootstrap code can start from 0x000C/0x0018/0x001E
+    JMPS: array[0..1] of byte;
+    NEWLDRSignature: array[1..6] of char;       { NEWLDR Signature }
+    Drive: Byte;                                { LOADER physical drive and boot flag }
+    LoaderCHS: TCHS;                            { CHS address of LOADER boot sector or image file }
+    DLMin: Byte;                                { Allowed DL minimum (?) }
+    Reserver: Array[1..3] of Byte;              { Reserved (default: 0x000000) }
+    LoaderLBA: TLBA;                            { LBA of LOADER boot sector or image file }
+    Patch: Word;                                { Patch offset of VBR boot unit }
+    Checksum: Word;                             { Checksum (0x0000 if not used) }
+    OEMSignature: array[1..6] of Char;          { OEM loader signature ("MSWIN4" for REAL/32 }
+    Bootstrap: array[1..397] of Byte;             { Bootstrap code }
+    AAPSignature: Word;                         { AAP Signature }
+	AAPPartition: TAAPPartition;                { AAP Partition }
+    Partitions: Array[1..4] of TPartition;      { Partitions }
+    Signature: Word;                            { Signature }
+  end;
+
+  TMBRAAP=record
     Bootstrap: array[0..427] of byte;           { Bootstrap code area }
     AAPSignature: Word;                         { AAP Signature }
+	AAPPartition: TAAPPartition;                { AAP Partition }
+    Partitions: Array[1..4] of TPartition;      { Partitions }
+    Signature: Word;                            { Signature }
   end;
 
-  TMBRSpeedStor=record                          // @todo not finished yet
+  TMBRSpeedStor=record
     Bootstrap: array[0..379] of byte;           { Bootstrap code area }
     NECSignature: Word;                         { NEC Signature }
     Partitions: Array[1..8] of TPartition;      { Partitions }
