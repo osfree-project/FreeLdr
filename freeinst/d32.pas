@@ -21,7 +21,7 @@ begin
 
   drv[0] := Drive; drv[1] := #0;
 
-  rc := AbsRead(AnsiString(@drv), 0, 512, LongInt(@buf));
+  rc := AbsRead(AnsiString(@drv), 0, BYTES_PER_SECTOR, LongInt(@buf));
 
   if rc = 0 then
     SysGetDriveType := dtInvalid;

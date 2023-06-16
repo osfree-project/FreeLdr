@@ -53,6 +53,9 @@ var
   Terminology: Byte;
 
 const
+  BYTES_PER_SECTOR=512;
+
+const
   LVM_ENGINE_NO_ERROR                          = 0;
   LVM_ENGINE_OUT_OF_MEMORY                     = 1;
   LVM_ENGINE_IO_ERROR                          = 2;

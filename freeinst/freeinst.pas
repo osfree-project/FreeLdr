@@ -119,7 +119,7 @@ begin
   begin
     inc(p);
     DriveStatus:=LvmGetDriveStatus(LvmGetDriveHandle(DrivesArray[i].DriveNumber));
-    MenuItem('Physical drive '+IntToStr(DrivesArray[i].DriveNumber)+' '+DriveStatus.Drive_Name+' '+IntToStr(Trunc(Extended(DrivesArray[i].DriveSize)*512/1024/1024))+'MB ('+IfThen(DriveStatus.Corrupt_Partition_Table, 'Corrupt',IfThen(isGPT(DrivesArray[i].DriveNumber),'GPT','MBR'))+')', p, 16, DrivesArray[i].DriveNumber, '');
+    MenuItem('Physical drive '+IntToStr(DrivesArray[i].DriveNumber)+' '+DriveStatus.Drive_Name+' '+IntToStr(Trunc(Extended(DrivesArray[i].DriveSize)*BYTES_PER_SECTOR/1024/1024))+'MB ('+IfThen(DriveStatus.Corrupt_Partition_Table, 'Corrupt',IfThen(isGPT(DrivesArray[i].DriveNumber),'GPT','MBR'))+')', p, 16, DrivesArray[i].DriveNumber, '');
     if DriveStatus.Corrupt_Partition_Table then ShowError('Physical Drive ('+IntToStr(DrivesArray[i].DriveNumber)+'):'#10#13#10#13'Partition table is corrupt');
     if DriveStatus.Unusable then ShowError('Physical Drive ('+IntToStr(DrivesArray[i].DriveNumber)+'):'#10#13#10#13'Unusable');
   end;
@@ -283,10 +283,10 @@ If FH > 0 Then
     StrMove( bpb, @F32Bb[11], 79);
     FSD_LoadSeg:=$0800;
     FSD_Entry:=0;
-    FSD_Len:=(BblockLen - 1024) div 512;
+    FSD_Len:=(BblockLen - 1024) div BYTES_PER_SECTOR;
     FSD_Addr:=2;
     End;
-  StrMove (F32Bb, @FreeSect0, 512);
+  StrMove (F32Bb, @FreeSect0, BYTES_PER_SECTOR);
   End
  Else
   Begin
@@ -330,7 +330,7 @@ DevHandle:= wDevHandle;
 Lock_Disk(devhandle);
 {$ifdef OS2}
       Fat32FSctrl(Devhandle);
-      fat32WriteSector(DevHandle, 0, BBlockLen DIV 512, F32Buf);
+      fat32WriteSector(DevHandle, 0, BBlockLen DIV BYTES_PER_SECTOR, F32Buf);
 {$else}
       Write_Disk(DevHandle, F32Buf, BBlockLen);
 {$endif}
@@ -396,7 +396,7 @@ If FH > 0 Then
     FSD_Len:=(BblockLen - 512) div 512;         // Length of boot block in sectors
     FSD_Addr:=1;                                // Startsector for boot block
     End;
-  StrMove (F32Bb, @FreeSect0, 512);
+  StrMove (F32Bb, @FreeSect0, BYTES_PER_SECTOR);
   End
  Else
   Begin
@@ -406,7 +406,7 @@ If FH > 0 Then
 FH := FileOpen( drive1+'\boot\loader\preldr_mini.mdl', fmOpenRead OR fmShareDenyNone);
 If FH > 0 Then
   Begin
-  Count := Word(FileRead( FH, F32bb[512], BblockLen - 512 ));
+  Count := Word(FileRead( FH, F32bb[BYTES_PER_SECTOR], BblockLen - 512 ));
   FileClose( FH );
   End
  Else
@@ -577,7 +577,7 @@ If FH > 0 Then
     FSD_Addr:=1;                                // Startsector for boot block
     End;
   FillChar(HPbuf,SizeOf(HPbuf),255);            // Wipe HPbug again
-  StrMove (F32Bb, @FreeSect0, 512);
+  StrMove (F32Bb, @FreeSect0, BYTES_PER_SECTOR);
   End
  Else
   Begin
@@ -589,7 +589,7 @@ If FH > 0 Then
 FH := FileOpen( drive1+'\boot\loader\preldr_mini.mdl', fmOpenRead OR fmShareDenyNone);
 If FH > 0 Then
   Begin
-  Count := Word(FileRead( FH, F32bb[512], BblockLen - 512 ));
+  Count := Word(FileRead( FH, F32bb[BYTES_PER_SECTOR], BblockLen - 512 ));
   FileClose( FH );
   End
  Else
@@ -675,7 +675,7 @@ If FH > 0 Then
     Writeln('Normally you should only restore the BootSector (512 bytes)');
     Writeln('Press S to only restore bootSector or B to restore 8k bootBlock');
     key := upcase(readkey);
-    If key <> 'B' Then BufSize := 512;
+    If key <> 'B' Then BufSize := BYTES_PER_SECTOR;
     End;
   Open_Disk(Drive,wDevHandle);
   DevHandle:= wDevHandle;
@@ -684,7 +684,7 @@ If FH > 0 Then
     Begin
 {$ifdef OS2}
       Fat32FSctrl(Devhandle);
-      fat32WriteSector(DevHandle, 0, BBlockLen DIV 512, BBuf);
+      fat32WriteSector(DevHandle, 0, BBlockLen DIV BYTES_PER_SECTOR, BBuf);
 {$else}
       Write_Disk(DevHandle, BBuf, BBlockLen);
 {$endif}

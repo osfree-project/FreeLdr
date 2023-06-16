@@ -115,7 +115,7 @@ Type
     Patch: Word;                                { Patch offset of VBR boot unit }
     Checksum: Word;                             { Checksum (0x0000 if not used) }
     OEMSignature: array[1..6] of Char;          { OEM loader signature ("MSWIN4" for REAL/32 }
-    Bootstrap: array[1..397] of Byte;             { Bootstrap code }
+    Bootstrap: array[1..397] of Byte;           { Bootstrap code }
     AAPSignature: Word;                         { AAP Signature }
 	AAPPartition: TAAPPartition;                { AAP Partition }
     Partitions: Array[1..4] of TPartition;      { Partitions }
@@ -154,8 +154,8 @@ Type
   end;
 
   TGPTHeader=record
-    MBR: TMBRGeneric;
-    Signature: Array[0..7] of Char;
+    MBR: TMBRGeneric;                           { MBR }
+    Signature: Array[0..7] of Char;             { GPT Signature }
   end;
 
 function isGPT(DriveNum: Byte): Boolean;
@@ -179,13 +179,13 @@ end;
 
 function MBRDetect(DriveNum: Byte): MBRType;
 var
-  Buffer: ARRAY [0..511] of Byte;
-  MBR: TMBRGeneric absolute buffer;
-  NEWLDRMBR: TMBRNewLdr absolute buffer;
-  AAP: TMBRAAP absolute buffer;
-  NEC: TMBRSpeedStor absolute buffer;
-  Ontrack: TMBROntrack absolute buffer;
-  Modern: TMBRModern absolute buffer;
+  Buffer: ARRAY [0..511] of Byte;               { Actual MBR storage }
+  MBR: TMBRGeneric absolute buffer;             { MBRGeneric alias }
+  NEWLDRMBR: TMBRNewLdr absolute buffer;        { MBRNewLdr alias }
+  AAP: TMBRAAP absolute buffer;                 { MBRAAP alias }
+  NEC: TMBRSpeedStor absolute buffer;           { MBRSpeedStor alias }
+  Ontrack: TMBROntrack absolute buffer;         { MBROntrack alias }
+  Modern: TMBRModern absolute buffer;           { MBRModern alias }
 begin
   Result:=MBRInvalid;                           { By default no MBR found }
   ReadMBRSector(DriveNum, Buffer);              { Read MBR from Drive }

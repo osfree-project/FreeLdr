@@ -82,7 +82,7 @@ begin
   begin
     inc(p);
     DriveStatus:=LvmGetDriveStatus(LvmGetDriveHandle(DrivesArray[i].DriveNumber));
-    MenuItem('Physical drive '+IntToStr(DrivesArray[i].DriveNumber)+' '+DriveStatus.Drive_Name+' '+IntToStr(Trunc(Extended(DrivesArray[i].DriveSize)*512/1024/1024))+'MB ('+IfThen(DriveStatus.Corrupt_Partition_Table, 'Corrupt',IfThen(isGPT(DrivesArray[i].DriveNumber),'GPT','MBR'))+')', p, 0, DrivesArray[i].DriveNumber, '');
+    MenuItem('Physical drive '+IntToStr(DrivesArray[i].DriveNumber)+' '+DriveStatus.Drive_Name+' '+IntToStr(Trunc(Extended(DrivesArray[i].DriveSize)*BYTES_PER_SECTOR/1024/1024))+'MB ('+IfThen(DriveStatus.Corrupt_Partition_Table, 'Corrupt',IfThen(isGPT(DrivesArray[i].DriveNumber),'GPT','MBR'))+')', p, 0, DrivesArray[i].DriveNumber, '');
     if DriveStatus.Corrupt_Partition_Table then ShowError('Physical Drive ('+IntToStr(DrivesArray[i].DriveNumber)+'):'#10#13#10#13'Partition table is corrupt');
     if DriveStatus.Unusable then ShowError('Physical Drive ('+IntToStr(DrivesArray[i].DriveNumber)+'):'#10#13#10#13'Unusable');
   end;
@@ -111,7 +111,7 @@ begin
     if PA[i].Primary_Partition then
     begin
       inc(p);
-      MenuItem('Partition '+PA[i].Partition_Name+' '+IntToStr(Trunc(Extended(PA[i].True_Partition_Size)*512/1024/1024))+' MB '+IfThen(PA[i].Primary_Partition,'Primary','Logical')+' '+LvmGetPartitionType(PA[i].Partition_Type)+' '+LvmGetPartitionStatus(PA[i].Partition_Status), p+2, 0, p+2{DrivesArray[i].DriveNumber}, '');
+      MenuItem('Partition '+PA[i].Partition_Name+' '+IntToStr(Trunc(Extended(PA[i].True_Partition_Size)*BYTES_PER_SECTOR/1024/1024))+' MB '+IfThen(PA[i].Primary_Partition,'Primary','Logical')+' '+LvmGetPartitionType(PA[i].Partition_Type)+' '+LvmGetPartitionStatus(PA[i].Partition_Status), p+2, 0, p+2{DrivesArray[i].DriveNumber}, '');
     end;
   end;
   lp:=p;
@@ -120,7 +120,7 @@ begin
     if not PA[i].Primary_Partition then
     begin
       inc(p);
-      MenuItem('Partition '+PA[i].Partition_Name+' '+IntToStr(Trunc(Extended(PA[i].True_Partition_Size)*512/1024/1024))+' MB '+IfThen(PA[i].Primary_Partition,'Primary','Logical')+' '+LvmGetPartitionType(PA[i].Partition_Type)+' '+LvmGetPartitionStatus(PA[i].Partition_Status), p+2, 0, p+2{DrivesArray[i].DriveNumber}, '');
+      MenuItem('Partition '+PA[i].Partition_Name+' '+IntToStr(Trunc(Extended(PA[i].True_Partition_Size)*BYTES_PER_SECTOR/1024/1024))+' MB '+IfThen(PA[i].Primary_Partition,'Primary','Logical')+' '+LvmGetPartitionType(PA[i].Partition_Type)+' '+LvmGetPartitionStatus(PA[i].Partition_Status), p+2, 0, p+2{DrivesArray[i].DriveNumber}, '');
     end;
   end;
   ResetMenu(YN);
