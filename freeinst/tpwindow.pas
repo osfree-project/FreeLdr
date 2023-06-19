@@ -136,6 +136,9 @@ procedure DisposeWindow(W : WindowPtr);
 function DisplayWindow(W : WindowPtr) : Boolean;
   {-Display the specified window, returning true if successful}
 
+function EraseTopWindow : WindowPtr;
+  {-Erase the most recently displayed window, returning a pointer to it}
+
 implementation
 
 //////////////////////////////////////////////////////////////////////////
@@ -236,6 +239,11 @@ begin
     TextAttr:=WAttr;
     if Clear then ClrScr;
   end;
+end;
+
+function EraseTopWindow : WindowPtr;
+  {-Erase the most recently displayed window, returning a pointer to it}
+begin
 end;
 
 end.

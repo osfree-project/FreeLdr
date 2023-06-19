@@ -270,7 +270,25 @@ function PickWindow
    ) : Boolean;                   {True if PickWindow was successful}
   {-Display a window, let user scroll around in it, and return choice.
     Choice returned is in the range 1..NumItems.}
+var
+  W: WindowPtr;
 begin
+  Result:=MakeWindow(W,                       {Window identifier returned}
+    XLow, YLow,              {Window coordinates, including frame if any}
+    XHigh, YHigh,            {Window coordinates, including frame if any}
+    DrawFrame,               {True to draw a frame around window}
+    True,                    {True to clear window when displayed}
+    False,                   {True to save window contents when erased}
+    Colors[WindowAttr],      {Video attribute for body of window}
+    Colors[FrameAttr],       {Video attribute for frame}
+    Colors[HeaderAttr],      {Video attribute for header}
+    Header                   {Title for window}
+    );
+    if Result then
+    begin
+      DisposeWindow(EraseTopWindow);
+      Result:=False;
+    end;
 end;
 
 procedure FillPickWindow
