@@ -95,13 +95,18 @@ Type
     Hours: Byte;
     Bootstrap2: Array[0..215] of Byte;          { Second Bootstrap code area }
     DiskSignature: DWord;                       { NT disk signature }
-    Protect: Word;                              { }
+    Protect: Word;                              { Copy protection flag }
     Partitions: Array[1..4] of TPartition;      { Partitions }
     Signature: Word;                            { Signature }
   end;
 
-  TAAPPartition=record                          // @todo not finished yet
-    Empty: array[1..16] of byte;
+  TAAPPartition=record
+    PhysicalDrive: Byte;                        { AAP physical drive (0x80-0xFE; 0x00: not used; 0x01-0x7F, 0xFF: reserved)   }
+    FirstSectorCHS: TCHS;                       { CHS address of partition/image file }
+    PartitionType: Byte;                        { Type of partition }
+    LastSectorCHS: TCHS;                        { Reserved for CHS end address in AAP (optional; byte at offset 0x01B5 is also used for MBR checksum (PTS DE, BootWizard); 0x000000 if not used)   }
+    FirstSectorLBA: TLBA;                       { Start LBA of AAP image file or VBR/EBR or relative sectors of AAP partition (copied to offset +01Chex in the loaded sector over the "hidden sectors" entry of a DOS 3.31 BPB (or emulation thereof) to also support EBR booting) }
+    Size: DWord;                                { Reserved for sectors in AAP (optional; 0x00000000 if not used) }
   end;
 
   TMBRNewLdr=record                             // @todo Bootstrap code can start from 0x000C/0x0018/0x001E
@@ -160,7 +165,7 @@ Type
 
 function isGPT(DriveNum: Byte): Boolean;
 var
-  Buffer: ARRAY [0..1023] of Byte;
+  Buffer: ARRAY [0..BYTES_PER_SECTOR*2-1] of Byte;
   GPT: TGPTHeader absolute buffer;
 begin
   LvmReadSectors(DriveNum, 0, 2, Buffer);
@@ -179,7 +184,7 @@ end;
 
 function MBRDetect(DriveNum: Byte): MBRType;
 var
-  Buffer: ARRAY [0..511] of Byte;               { Actual MBR storage }
+  Buffer: ARRAY [0..BYTES_PER_SECTOR-1] of Byte;               { Actual MBR storage }
   MBR: TMBRGeneric absolute buffer;             { MBRGeneric alias }
   NEWLDRMBR: TMBRNewLdr absolute buffer;        { MBRNewLdr alias }
   AAP: TMBRAAP absolute buffer;                 { MBRAAP alias }
@@ -197,11 +202,11 @@ begin
       Result:=MBRProtective;                    { If so, then we have or Protective or Hybrid MBR }
       // @todo Detect MBRHybrid here, seems hard to do this...
     end else begin
-      {Modern detection is not safe, but works in most cases because Zeroes not often can be found in other MBRs.}
-      If (Modern.Zeros=0) and ((Modern.Protect=0) or (Modern.Protect=$5a5a)) then Result:=MBRModern;  {Check for Modern MBR }
-      If NEC.NECSignature=$A55A then Result:=MBRSpeedStor;           {Check for NEC MBR }
-      If Ontrack.DMSignature=$55AA then Result:=MBROntrack;          {Check for Disk Manager MBR }
-      If AAP.AAPSignature=$5678 then Result:=MBRAAP;                 {Check for AAR MBR }
+      {Modern detection is not safe, but works in most cases because Zeros not often can be found in other MBRs.}
+      If (Modern.Zeros=0) and ((Modern.Protect=0) or (Modern.Protect=$5a5a)) then Result:=MBRModern;  { Check for Modern MBR }
+      If NEC.NECSignature=$A55A then Result:=MBRSpeedStor;           { Check for NEC MBR }
+      If Ontrack.DMSignature=$55AA then Result:=MBROntrack;          { Check for Disk Manager MBR }
+      If AAP.AAPSignature=$5678 then Result:=MBRAAP;                 { Check for AAR MBR }
       if NEWLDRMBR.NEWLDRSignature='NEWLDR' then Result:=MBRNEWLDR;  { Check for NEWLDR MBR }
     end;
   end;

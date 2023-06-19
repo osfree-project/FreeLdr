@@ -32,9 +32,6 @@ uses
   Common, Strings, SysUtils, Crt, Dos, LVMAPI, MBR;
 
 const
-  BIOSDISK_READ               = $0;
-  BIOSDISK_WRITE              = $1;
-
   METHOD_BUFFERED             = $00000000;
   FILE_ANY_ACCESS             = $00000000;
   FILE_DEVICE_FILE_SYSTEM     = $00000009;
