@@ -146,58 +146,58 @@ type
   TPartitionInformation=record
     Partition_Handle: ADDRESS;                      // The handle used to perform operations on this partition.
     Volume_Handle: ADDRESS;                         // If this partition is part of a volume, this will be the handle of
-                                                    //the volume.  If this partition is NOT part of a volume, then this
-                                                    //handle will be 0.
+                                                    // the volume.  If this partition is NOT part of a volume, then this
+                                                    // handle will be 0.
     Drive_Handle: ADDRESS;                          // The handle for the drive this partition resides on.
     Partition_Serial_Number: DoubleWord;            // The serial number assigned to this partition.
     Partition_Start: CARDINAL32;                    // The LBA of the first sector of the partition.
     True_Partition_Size: CARDINAL32;                // The total number of sectors comprising the partition.
     Usable_Partition_Size: CARDINAL32;              // The size of the partition as reported to the IFSM.  This is the
-                                                    //size of the partition less any LVM overhead.
+                                                    // size of the partition less any LVM overhead.
     Boot_Limit: CARDINAL32;                         // The maximum number of sectors from this block of free space that can be used to
-                                                    //create a bootable partition if you allocate from the beginning of the block of
-                                                    //free space.
+                                                    // create a bootable partition if you allocate from the beginning of the block of
+                                                    // free space.
     Spanned_Volume: BOOLEAN;                        // TRUE if this partition is part of a multi-partition volume.
     Primary_Partition: BOOLEAN;                     // True or False.  Any non-zero value here indicates that
-                                                    //this partition is a primary partition.  Zero here indicates
-                                                    //that this partition is a "logical drive" - i.e. it resides
-                                                    //inside of an extended partition.
+                                                    // this partition is a primary partition.  Zero here indicates
+                                                    // that this partition is a "logical drive" - i.e. it resides
+                                                    // inside of an extended partition.
     Active_Flag: BYTE;                              // 80 = Partition is marked as being active.
                                                     // 0 = Partition is not active.
     OS_Flag: BYTE;                                  // This field is from the partition table.  It is known as the
-                                                    //OS flag, the Partition Type Field, Filesystem Type, and
-                                                    //various other names.
+                                                    // OS flag, the Partition Type Field, Filesystem Type, and
+                                                    // various other names.
 
-                                                    //Values of interest
+                                                    // Values of interest
 
-                                                    //If this field is: (values are in hex)
+                                                    // If this field is: (values are in hex)
 
-                                                    //07 = The partition is a compatibility partition formatted for use
-                                                    //with an installable filesystem, such as HPFS or JFS.
-                                                    //00 = Unformatted partition
-                                                    //01 = FAT12 filesystem is in use on this partition.
-                                                    //04 = FAT16 filesystem is in use on this partition.
-                                                    //0A = OS/2 Boot Manager Partition
-                                                    //35 = LVM partition
-                                                    //84 = OS/2 FAT16 partition which has been relabeled by Boot Manager to "Hide" it.
+                                                    // 07 = The partition is a compatibility partition formatted for use
+                                                    // with an installable filesystem, such as HPFS or JFS.
+                                                    // 00 = Unformatted partition
+                                                    // 01 = FAT12 filesystem is in use on this partition.
+                                                    // 04 = FAT16 filesystem is in use on this partition.
+                                                    // 0A = OS/2 Boot Manager Partition
+                                                    // 35 = LVM partition
+                                                    // 84 = OS/2 FAT16 partition which has been relabeled by Boot Manager to "Hide" it.
     Partition_Type: BYTE;                           // 0 = Free Space
-                                                    //1 = LVM Partition (Part of an LVM Volume.)
-                                                    //2 = Compatibility Partition
-                                                    //All other values are reserved for future use.
+                                                    // 1 = LVM Partition (Part of an LVM Volume.)
+                                                    // 2 = Compatibility Partition
+                                                    // All other values are reserved for future use.
     Partition_Status: BYTE;                         // 0 = Free Space
-                                                    //1 = In Use - i.e. already assigned to a volume.
-                                                    //2 = Available - i.e. not currently assigned to a volume.
+                                                    // 1 = In Use - i.e. already assigned to a volume.
+                                                    // 2 = Available - i.e. not currently assigned to a volume.
     On_Boot_Manager_Menu: BOOLEAN;                  // Set to TRUE if this partition is not part of a Volume yet is on the Boot Manager Menu.
     Reserved: BYTE;                                 // Alignment.
     Volume_Drive_Letter: char;                      // The drive letter assigned to the volume that this partition is a part of.
-    Drive_Name: Array[0..DISK_NAME_SIZE-1] of char;   // User assigned name for this disk drive.
+    Drive_Name: Array[0..DISK_NAME_SIZE-1] of char; // User assigned name for this disk drive.
     File_System_Name: Array[0..FILESYSTEM_NAME_SIZE-1] of char;// The name of the filesystem in use on this partition, if it is known.
     Partition_Name: Array[0..PARTITION_NAME_SIZE-1] of char;   // The user assigned name for this partition.
     Volume_Name: Array[0..VOLUME_NAME_SIZE-1] of char;         // If this partition is part of a volume, then this will be the
-                                                             //name of the volume that this partition is a part of.  If this
-                                                             //record represents free space, then the Volume_Name will be
-                                                             //"FREE SPACE xx", where xx is a unique numeric ID generated by
-                                                             //LVM.DLL.  Otherwise it will be an empty string.
+                                                               // name of the volume that this partition is a part of.  If this
+                                                               // record represents free space, then the Volume_Name will be
+                                                               // "FREE SPACE xx", where xx is a unique numeric ID generated by
+                                                               // LVM.DLL.  Otherwise it will be an empty string.
   end;
 
   TPartitionsArray=Array of TPartitionInformation;
@@ -229,27 +229,27 @@ const
   IOCTL_DISK_GET_DRIVE_LAYOUT = $0007400c;
   
 type
-STORAGE_PROPERTY_QUERY = packed record
-  PropertyId: DWORD;
-  QueryType: DWORD;
-  AdditionalParameters: array[0..3] of Byte;
-end;
+  STORAGE_PROPERTY_QUERY = packed record
+    PropertyId: DWORD;
+    QueryType: DWORD;
+    AdditionalParameters: array[0..3] of Byte;
+  end;
 
-STORAGE_DEVICE_DESCRIPTOR = packed record
-  Version: ULONG;
-  Size: ULONG;
-  DeviceType: Byte;
-  DeviceTypeModifier: Byte;
-  RemovableMedia: Boolean;
-  CommandQueueing: Boolean;
-  VendorIdOffset: ULONG;
-  ProductIdOffset: ULONG;
-  ProductRevisionOffset: ULONG;
-  SerialNumberOffset: ULONG;
-  STORAGE_BUS_TYPE: DWORD;
-  RawPropertiesLength: ULONG;
-  RawDeviceProperties: array[0..511] of Byte;
-end;
+  STORAGE_DEVICE_DESCRIPTOR = packed record
+    Version: ULONG;
+    Size: ULONG;
+    DeviceType: Byte;
+    DeviceTypeModifier: Byte;
+    RemovableMedia: Boolean;
+    CommandQueueing: Boolean;
+    VendorIdOffset: ULONG;
+    ProductIdOffset: ULONG;
+    ProductRevisionOffset: ULONG;
+    SerialNumberOffset: ULONG;
+    STORAGE_BUS_TYPE: DWORD;
+    RawPropertiesLength: ULONG;
+    RawDeviceProperties: array[0..511] of Byte;
+  end;
 
 type DISK_GEOMETRY=record
     Cylinders: Int64;
@@ -578,8 +578,8 @@ begin
 
 {$ifdef windows}
   Hndl:=HANDLE(LvmGetDriveHandle(Drive_Number));
-  SetFilePointer(Hndl, Starting_Sector*512, nil, FILE_BEGIN);
-  if ReadFile(Hndl, Buffer, Sectors_To_Read*512, DataLen, nil)=false then writeln('error');
+  SetFilePointer(Hndl, Starting_Sector*BYTES_PER_SECTOR, nil, FILE_BEGIN);
+  if ReadFile(Hndl, Buffer, Sectors_To_Read*BYTES_PER_SECTOR, DataLen, nil)=false then writeln('error');
   result:=LVM_ENGINE_NO_ERROR;
 {$endif}
 end;
@@ -602,8 +602,8 @@ begin
 
 {$ifdef windows}
   Hndl:=HANDLE(LvmGetDriveHandle(Drive_Number));
-  SetFilePointer(Hndl, Starting_Sector*512, nil, FILE_BEGIN);
-  WriteFile(Hndl, Buffer, Sectors_To_Write*512, DataLen, nil);
+  SetFilePointer(Hndl, Starting_Sector*BYTES_PER_SECTOR, nil, FILE_BEGIN);
+  WriteFile(Hndl, Buffer, Sectors_To_Write*BYTES_PER_SECTOR, DataLen, nil);
   result:=LVM_ENGINE_NO_ERROR;
 {$endif}
 end;

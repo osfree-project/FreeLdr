@@ -76,7 +76,7 @@ Type
     MBROntrack,                                 { Ontrack Disk Manager }
     MBRHybrid,                                  { Hybrid MBR }
     MBRProtective,                              { Protective MBR }
-	MBRFreeLdr                                  { FreeLDR MBR }
+    MBRFreeLdr                                  { FreeLDR MBR }
   );
 
 Type
@@ -117,7 +117,7 @@ Type
     OEMSignature: array[1..6] of Char;          { OEM loader signature ("MSWIN4" for REAL/32 }
     Bootstrap: array[1..397] of Byte;           { Bootstrap code }
     AAPSignature: Word;                         { AAP Signature }
-	AAPPartition: TAAPPartition;                { AAP Partition }
+    AAPPartition: TAAPPartition;                { AAP Partition }
     Partitions: Array[1..4] of TPartition;      { Partitions }
     Signature: Word;                            { Signature }
   end;
@@ -125,7 +125,7 @@ Type
   TMBRAAP=record
     Bootstrap: array[0..427] of byte;           { Bootstrap code area }
     AAPSignature: Word;                         { AAP Signature }
-	AAPPartition: TAAPPartition;                { AAP Partition }
+    AAPPartition: TAAPPartition;                { AAP Partition }
     Partitions: Array[1..4] of TPartition;      { Partitions }
     Signature: Word;                            { Signature }
   end;

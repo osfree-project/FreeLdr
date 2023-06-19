@@ -210,10 +210,10 @@ If FH > 0 Then
   FileClose( FH );
 
   // Set OEM ID
-  StrMove( FreeLdr0+3, osFree, 8 );
+  Move( FreeLdr0[3], osFree, 8 );
 
   //  Rewrite BPB from HD
-  StrMove( FreeLdr0+11, @Sector0[11], 51 );
+  Move( FreeLdr0[11], Sector0[11], 51 );
 
   Sector0 := FreeLdr0;
   End
@@ -280,13 +280,13 @@ If FH > 0 Then
     Oem_Id := Str8(osFree);
     //  Rewrite BPB from HD
     //  For FAT32:                 79 bytes
-    StrMove( bpb, @F32Bb[11], 79);
+    Move( bpb, F32Bb[11], 79);
     FSD_LoadSeg:=$0800;
     FSD_Entry:=0;
     FSD_Len:=(BblockLen - 1024) div BYTES_PER_SECTOR;
     FSD_Addr:=2;
     End;
-  StrMove (F32Bb, @FreeSect0, BYTES_PER_SECTOR);
+    Move (F32Bb, FreeSect0, BYTES_PER_SECTOR);
   End
  Else
   Begin
@@ -390,13 +390,13 @@ If FH > 0 Then
   With FreeSect0 Do
     Begin
     Oem_Id := osFree;                           // Insert new OEM ID, 'IBM is required as first 3 letters or mounting of IFS will fail
-    StrMove( bpb, @F32Bb[11], 51);              // Copy bpb from HD, 51 bytes
+    Move( bpb, F32Bb[11], 51);              // Copy bpb from HD, 51 bytes
     FSD_LoadSeg:=$0800;                         // FSD load address
     FSD_Entry:=0;                               // FSD entry point
     FSD_Len:=(BblockLen - 512) div 512;         // Length of boot block in sectors
     FSD_Addr:=1;                                // Startsector for boot block
     End;
-  StrMove (F32Bb, @FreeSect0, BYTES_PER_SECTOR);
+    Move (F32Bb, FreeSect0, BYTES_PER_SECTOR);
   End
  Else
   Begin
@@ -570,14 +570,14 @@ If FH > 0 Then
   With FreeSect0 Do
     Begin
     Oem_Id := osFree;                           // Insert new OEM ID, 'IBM is required as first 3 letters or mounting of IFS will fail
-    StrMove( bpb, @F32Bb[11], 51);              // Copy bpb from HD, 51 bytes
+    Move( bpb, F32Bb[11], 51);              // Copy bpb from HD, 51 bytes
     FSD_LoadSeg:=$0800;                         // FSD load address
     FSD_Entry:=0;                               // FSD entry point
     FSD_Len:=(BblockLen - 512) div 512;         // Length of boot block in sectors
     FSD_Addr:=1;                                // Startsector for boot block
     End;
-  FillChar(HPbuf,SizeOf(HPbuf),255);            // Wipe HPbug again
-  StrMove (F32Bb, @FreeSect0, BYTES_PER_SECTOR);
+    FillChar(HPbuf,SizeOf(HPbuf),255);            // Wipe HPbug again
+    Move (F32Bb, FreeSect0, BYTES_PER_SECTOR);
   End
  Else
   Begin
