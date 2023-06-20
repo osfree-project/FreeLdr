@@ -139,7 +139,7 @@ var
   Info : TSearchRec;
   
 begin
-
+  XHigh:=0;
   NumItems:=0;
   If FindFirst(Mask,FileAttr,Info)=0 then
   begin
@@ -150,7 +150,8 @@ begin
         begin
         //If (Attr and faDirectory) = faDirectory then
 //          Write('Dir : ');
-        Items[NumItems-1]:=Name;//,Size:15);
+          Items[NumItems-1]:=Name;//,Size:15);
+          if XHigh<Length(Name) then XHigh:=Length(Name);
         end;
     Until FindNext(info)<>0;
     FindClose(Info);
@@ -160,7 +161,7 @@ begin
    @GetString,          {Pointer to function to return each item string}
    NumItems,               {Number of items to pick from}
    XLow, YLow,
-   XHigh, YHigh,
+   XLow+XHigh, YHigh,
    True,           {True to draw a frame around window}
    Colors,
    '',

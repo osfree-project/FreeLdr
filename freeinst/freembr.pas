@@ -66,6 +66,19 @@ const
     $03                      {ShadowColor}
     );
 
+  FileColors: PickColorArray =
+  (WhiteOnBlue,                    {Color for normal unselected items}
+   WhiteOnBlue,                     {Color for window frame}
+   WhiteOnBlue,                    {Color for window header}
+   BlueOnLtGray,                    {Color for normal selected item}
+   0,                     {Color for alternate unselected items}
+   0                        {Color for alternate selected item}
+   {$IFDEF PickItemDisable}
+   ,
+   DkGrayOnBlue                 {Color for unpickable item}
+   {$ENDIF}
+   );
+
 function SelectDisk(): Byte;
 var
   YN: Menu;
@@ -132,32 +145,18 @@ end;
 
 // Backup MBR sector to a file
 Procedure Backup_MBR_sector;
-Const
-  Colors: PickColorArray =
-  (WhiteOnBlue,                    {Color for normal unselected items}
-   WhiteOnBlue,                     {Color for window frame}
-   WhiteOnBlue,                    {Color for window header}
-   BlueOnLtGray,                    {Color for normal selected item}
-   0,                     {Color for alternate unselected items}
-   0                        {Color for alternate selected item}
-   {$IFDEF PickItemDisable}
-   ,
-   DkGrayOnBlue                 {Color for unpickable item}
-   {$ENDIF}
-   );
 var
   F: integer;
-  Filename:     ShortString;
+  Filename: ShortString;
 begin
   GetFileName('*', faArchive,
     5, 5,
     10, 1,
-    Colors,
+    FileColors,
     FileName
     );
 
   ReadMBRSector(SelectDisk,sector0);
-
 
   F:=FileCreate('MBR.BIN');
   FileWrite(F, sector0, SizeOf(sector0));
@@ -205,7 +204,7 @@ Begin
     FreeMBR[$1bd] := chr(BootDrv);                    {Insert disk boot number}
     Sector0 := FreeMBR;
     WriteMBRSector(Drive, sector0);
-    Writeln(#10,'Your MBR have been upgraded to FreeLDR , Press <Enter> to continue ');
+    ShowOK();
     Readln;
   End
   Else
@@ -259,8 +258,7 @@ Begin
   End
   Else
     Writeln('Sorry, the file ',filename,' returned error ',-FH);
-  Writeln('Press Enter to continue...');
-  Readln;
+  ShowOK();
 End;
 
 Procedure ManageMBR;
