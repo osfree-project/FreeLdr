@@ -98,7 +98,7 @@ type
       XL, YL : Byte;         {Turbo window coordinates (no frame included)}
       XH, YH : Byte;
 
-      HeaderP : ^string;     {Stores frame title, nil if none}
+      HeaderP : ^shortstring;     {Stores frame title, nil if none}
       Frame : FrameArray;    {Frame characters for this window}
       Current : SaveRec;     {Values to restore when this window is displayed}
       Previous : SaveRec;    {Values to restore when this window is erased}
@@ -126,7 +126,7 @@ function MakeWindow
     WindowAttr : Byte;       {Video attribute for body of window}
     FrameAttr : Byte;        {Video attribute for frame}
     HeaderAttr : Byte;       {Video attribute for header}
-    Header : string          {Title for window}
+    Header : shortstring          {Title for window}
     ) : Boolean;             {Returns True if successful}
   {-Allocate and initialize, but do not display, a new window}
 
@@ -141,6 +141,10 @@ function EraseTopWindow : WindowPtr;
 
 implementation
 
+uses
+  Strings,
+  StrUtils;
+  
 //////////////////////////////////////////////////////////////////////////
 // Private functions
 
@@ -171,7 +175,7 @@ function MakeWindow
     WindowAttr : Byte;       {Video attribute for body of window}
     FrameAttr : Byte;        {Video attribute for frame}
     HeaderAttr : Byte;       {Video attribute for header}
-    Header : string          {Title for window}
+    Header : shortstring          {Title for window}
     ) : Boolean;             {Returns True if successful}
   {-Allocate and initialize, but do not display, a new window}
 begin
@@ -217,6 +221,7 @@ begin
     end;
 
   end;
+  Result:=True;
 end;
 
 procedure DisposeWindow(W : WindowPtr);
@@ -233,12 +238,18 @@ begin
   With WindowP(W)^, Draw do
   begin
     SaveState(Previous);
-
-    If Framed then FrameWindow(XL1, YL1, XH1, YH1, FAttr, HAttr, HeaderP^);
+    If Framed then 
+	begin
+      if HeaderP=nil then 
+	    FrameWindow(XL1, YL1, XH1, YH1, FAttr, HAttr, '')
+	  else
+	    FrameWindow(XL1, YL1, XH1, YH1, FAttr, HAttr, HeaderP^);
+	end;
     Window(XL,YL,XH,YH);
     TextAttr:=WAttr;
     if Clear then ClrScr;
   end;
+  Result:=True;
 end;
 
 function EraseTopWindow : WindowPtr;

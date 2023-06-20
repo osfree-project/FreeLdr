@@ -151,11 +151,12 @@ var
 begin
   GetFileName('*', faArchive,
     5, 5,
-    10, 1,
+    20, 1,
     FileColors,
     FileName
     );
 
+  readln;
   ReadMBRSector(SelectDisk,sector0);
 
   F:=FileCreate('MBR.BIN');
@@ -234,7 +235,6 @@ Var
   Filename:     ShortString;
   FH:   Integer;
 Begin
-  Drive:=SelectDisk;
 
   Writeln('Enter name of the bootsectorfile to restore');
   Write('(Default is MBR_sect.000): ');
@@ -246,6 +246,7 @@ Begin
     );
 
   Readln(filename);
+  Drive:=SelectDisk;
 
   If filename = '' Then Filename := 'MBR_sect.000';
   FH := FileOpen( filename, fmOpenRead OR fmShareDenyNone);

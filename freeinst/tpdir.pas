@@ -161,7 +161,7 @@ begin
    @GetString,          {Pointer to function to return each item string}
    NumItems,               {Number of items to pick from}
    XLow, YLow,
-   XLow+XHigh, YHigh,
+   XLow+XHigh+2, YHigh,
    True,           {True to draw a frame around window}
    Colors,
    '',

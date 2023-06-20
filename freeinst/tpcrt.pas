@@ -137,7 +137,7 @@ type
   DirectoryPtr = ^DirectoryType;
 
 procedure FrameWindow(LeftCol, TopRow, RightCol, BotRow, FAttr, HAttr : Byte;
-                      Header : string);
+                      Header : shortstring);
   {-Draws a frame around a window}
 
 function WhereXAbs: Byte;
@@ -489,13 +489,14 @@ begin
 end;
 
 procedure FrameWindow(LeftCol, TopRow, RightCol, BotRow, FAttr, HAttr : Byte;
-                      Header : string);
+                      Header : shortstring);
   {-Draws a frame around a window}
 var
   i: byte;
 begin
   HiddenCursor;
   FastWrite(FrameChars[ULeft], TopRow, LeftCol, FAttr);
+
   for i:=LeftCol+1 to RightCol-1 do FastWrite(FrameChars[Horiz], TopRow, i, FAttr);
   FastWrite(FrameChars[URight], TopRow, RightCol, FAttr);
 

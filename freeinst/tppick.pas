@@ -278,11 +278,10 @@ var
   i: word;
 begin
 
-  for i:=1 to NumItems do
-  begin
-    WriteLn(f(StringFunc)(I));
-  end;
-  
+//  for i:=1 to NumItems do
+//  begin
+    //WriteLn(f(StringFunc)(I));
+  //end;
   Result:=MakeWindow(W,      {Window identifier returned}
     XLow, YLow,              {Window coordinates, including frame if any}
     XHigh, YHigh,            {Window coordinates, including frame if any}
@@ -298,7 +297,7 @@ begin
     begin
       CurrentChoice:=1;
       FillPickWindow(W, StringFunc, NumItems, Colors, Choice, CurrentChoice);
-      PickBar(W, StringFunc, NumItems, Colors, False, Choice, CurrentChoice);
+      //PickBar(W, StringFunc, NumItems, Colors, False, Choice, CurrentChoice);
       DisposeWindow(W);
       Result:=False;
     end;
@@ -313,8 +312,17 @@ procedure FillPickWindow
    FirstChoice : Word);           {...in a manner consistent with PickBar}
   {-Display a window, fill it with choices, and return.
     Choice specifies the initial item highlighted.}
+var
+  i: word;
+type
+  f=function (a:word): shortstring; far;
 begin
   DisplayWindow(W);
+
+  for i:=1 to NumItems do
+  begin
+    WriteLn(f(StringFunc)(I));
+  end;
 end;
 
 procedure PickBar
