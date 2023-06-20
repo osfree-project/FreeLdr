@@ -46,12 +46,13 @@ uses colordef,
      tpmenu,
      tpwindow,
      tpdir,
+     tppick,
      common,
      mbr,
      StrUtils,
      SysUtils,
      lvmapi,
-	 msgbox;
+     msgbox;
 
 const
   MenuColors : MenuColorArray =
@@ -131,10 +132,33 @@ end;
 
 // Backup MBR sector to a file
 Procedure Backup_MBR_sector;
+Const
+  Colors: PickColorArray =
+  (WhiteOnBlue,                    {Color for normal unselected items}
+   WhiteOnBlue,                     {Color for window frame}
+   WhiteOnBlue,                    {Color for window header}
+   BlueOnLtGray,                    {Color for normal selected item}
+   0,                     {Color for alternate unselected items}
+   0                        {Color for alternate selected item}
+   {$IFDEF PickItemDisable}
+   ,
+   DkGrayOnBlue                 {Color for unpickable item}
+   {$ENDIF}
+   );
 var
   F: integer;
+  Filename:     ShortString;
 begin
+  GetFileName('*', faArchive,
+    5, 5,
+    10, 1,
+    Colors,
+    FileName
+    );
+
   ReadMBRSector(SelectDisk,sector0);
+
+
   F:=FileCreate('MBR.BIN');
   FileWrite(F, sector0, SizeOf(sector0));
   FileClose(F);
@@ -193,16 +217,35 @@ End;
 
 // Restore MBRsector from a file
 Procedure Restore_MBR_sector;
-
+Const
+  Colors: PickColorArray =
+  (WhiteOnBlue,                    {Color for normal unselected items}
+   WhiteOnBlue,                     {Color for window frame}
+   WhiteOnBlue,                    {Color for window header}
+   BlueOnLtGray,                    {Color for normal selected item}
+   0,                     {Color for alternate unselected items}
+   0                        {Color for alternate selected item}
+   {$IFDEF PickItemDisable}
+   ,
+   DkGrayOnBlue                 {Color for unpickable item}
+   {$ENDIF}
+   );
 Var
   Drive         : Byte;
-  Filename:     String;
+  Filename:     ShortString;
   FH:   Integer;
 Begin
   Drive:=SelectDisk;
 
   Writeln('Enter name of the bootsectorfile to restore');
   Write('(Default is MBR_sect.000): ');
+  GetFileName('*', faArchive,
+    5, 5,
+    10, 1,
+    Colors,
+    FileName
+    );
+
   Readln(filename);
 
   If filename = '' Then Filename := 'MBR_sect.000';
@@ -241,8 +284,8 @@ begin
   MenuItem(' 3: Restore MBR sector', 3, 2, Ord(MRestoreMBR), 'Restore MBR sector from backup file');
   MenuItem(' 0: Exit', 4, 2, Ord(MExit), 'Exit FreeLDR installer');
   ResetMenu(MBRMenu);
-  MK:=MenuChoice(MBRMenu, SelectKey);
   repeat
+    MK:=MenuChoice(MBRMenu, SelectKey);
     case MK of
       Ord(MInstallMBR): Install_MBR;
       Ord(MBackUpMBR): Backup_MBR_sector;

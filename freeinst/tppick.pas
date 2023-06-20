@@ -270,10 +270,20 @@ function PickWindow
    ) : Boolean;                   {True if PickWindow was successful}
   {-Display a window, let user scroll around in it, and return choice.
     Choice returned is in the range 1..NumItems.}
+type
+  f=function (a:word): shortstring; far;
 var
   W: WindowPtr;
+  CurrentChoice: Word;
+  i: word;
 begin
-  Result:=MakeWindow(W,                       {Window identifier returned}
+
+  for i:=1 to NumItems do
+  begin
+    WriteLn(f(StringFunc)(I));
+  end;
+  
+  Result:=MakeWindow(W,      {Window identifier returned}
     XLow, YLow,              {Window coordinates, including frame if any}
     XHigh, YHigh,            {Window coordinates, including frame if any}
     DrawFrame,               {True to draw a frame around window}
@@ -286,7 +296,10 @@ begin
     );
     if Result then
     begin
-      DisposeWindow(EraseTopWindow);
+      CurrentChoice:=1;
+      FillPickWindow(W, StringFunc, NumItems, Colors, Choice, CurrentChoice);
+      PickBar(W, StringFunc, NumItems, Colors, False, Choice, CurrentChoice);
+      DisposeWindow(W);
       Result:=False;
     end;
 end;
@@ -301,6 +314,7 @@ procedure FillPickWindow
   {-Display a window, fill it with choices, and return.
     Choice specifies the initial item highlighted.}
 begin
+  DisplayWindow(W);
 end;
 
 procedure PickBar

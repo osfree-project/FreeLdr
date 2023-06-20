@@ -101,6 +101,16 @@ function CompleteFileName(Name : string) : string;
 
 implementation
 
+Uses
+  SysUtils;
+var
+  Items: array of string;
+  
+function GetString(N: Word): ShortString; far;
+begin
+  Result:=Items[N-1];
+end;
+
 function GetFileName
   (Mask : string;            {Search mask}
     FileAttr : Byte;         {Search attribute for files}
@@ -122,7 +132,41 @@ function GetFileName
       6 = No pick orientation !!.10
     else  Turbo critical error code
   }
+var
+  Choice: Word;
+  NumItems: Word;
+  XHigh: Word;
+  Info : TSearchRec;
+  
 begin
+
+  NumItems:=0;
+  If FindFirst(Mask,FileAttr,Info)=0 then
+  begin
+    Repeat
+      Inc(NumItems);
+      SetLength(Items, NumItems);
+      With Info do
+        begin
+        //If (Attr and faDirectory) = faDirectory then
+//          Write('Dir : ');
+        Items[NumItems-1]:=Name;//,Size:15);
+        end;
+    Until FindNext(info)<>0;
+    FindClose(Info);
+  end;
+
+  PickWindow(
+   @GetString,          {Pointer to function to return each item string}
+   NumItems,               {Number of items to pick from}
+   XLow, YLow,
+   XHigh, YHigh,
+   True,           {True to draw a frame around window}
+   Colors,
+   '',
+   Choice              {The item selected, in the range 1..NumItems}
+   );                   {True if PickWindow was successful}
+   Result:=0;
 end;
 
 function ChangeDirectory
