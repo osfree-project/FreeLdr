@@ -1,0 +1,3 @@
+[submodule "freeinst/tpro"]
+	path = freeinst/tpro
+	url = https://github.com/osfree-project/tpro
