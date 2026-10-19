@@ -1,12 +1,24 @@
-/*
- *   mini-libc functions
- *
+/*!
+ * @file sprintf.c
+ * @brief Mini-libc: formatted string output.
  */
 
 #include <shared.h>
 #include "libc.h"
 #include "fsys.h"
 
+/*!
+ * @brief Format a string into @a buffer.
+ *
+ * Supports the format specifiers `%d`, `%u`, `%x`, `%c`, `%s`. The
+ * variadic arguments are read from the stack via a raw pointer, which
+ * is the convention used by the original GRUB mini-libc.
+ *
+ * @param[out] buffer Destination buffer. Not NULL.
+ * @param[in]  format NUL-terminated format string. Not NULL.
+ * @param[in]  ...    Format arguments.
+ * @return Number of bytes written, excluding the terminating NUL.
+ */
 int
 grub_sprintf (char *buffer, const char *format, ...)
 {

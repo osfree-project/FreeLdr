@@ -1,12 +1,22 @@
-/*
- *   mini-libc functions
- *
+/*!
+ * @file aton.c
+ * @brief Mini-libc: ASCII to integer conversion.
  */
 
 #include <shared.h>
 #include "libc.h"
 #include "fsys.h"
 
+/*!
+ * @brief Convert a decimal or 0x-prefixed hexadecimal string to an int.
+ *
+ * Digits are processed left-to-right with positional weight.
+ *
+ * @param[in] h NUL-terminated input. Not NULL.
+ * @retval 0  Input contains a non-digit, or base is 10 but a hex
+ *            letter was found.
+ * @return The parsed value.
+ */
 int
 grub_aton(char *h)
 {

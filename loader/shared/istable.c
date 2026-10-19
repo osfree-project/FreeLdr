@@ -28,13 +28,26 @@
 *
 ****************************************************************************/
 
+/*!
+ * @file istable.c
+ * @brief Character classification table.
+ *
+ * The _IsTable array provides the character-class bitmask (print,
+ * space, digit, upper, lower, punct, cntrl, xdigit) used by the C
+ * runtime's is*() predicates. Index 0 covers EOF; indices 1..256
+ * cover byte values 0x00..0xFF.
+ */
 
 #include "variety.h"
 #include <ctype.h>
 
-_WCRTLINK const char _HUGEDATA _IsTable[257] = {
-
+/*!
+ * @def ___0__
+ * @brief Empty class-bitmask: used for characters with no class bits.
+ */
 #define ___0__ 0
+
+_WCRTLINK const char _HUGEDATA _IsTable[257] = {
 
 /* -1,EOF */  ___0__|___0__|___0__|___0__|___0__|___0__|___0__|___0__,
 /* 00,NUL */  ___0__|___0__|___0__|___0__|___0__|___0__|___0__|_CNTRL,

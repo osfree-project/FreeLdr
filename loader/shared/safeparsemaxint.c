@@ -1,12 +1,25 @@
-/*
- *   mini-libc functions
- *
+/*!
+ * @file safeparsemaxint.c
+ * @brief Mini-libc: overflow-checked integer parsing.
  */
 
 #include <shared.h>
 #include "libc.h"
 #include "fsys.h"
 
+/*!
+ * @brief Parse a decimal or 0x-prefixed hexadecimal integer safely.
+ *
+ * Advances @p str_ptr past the parsed digits and stores the value in
+ * @p myint_ptr. Returns 0 if no digits were found, or if the value
+ * would overflow @c MAXINT.
+ *
+ * @param[in,out] str_ptr   Pointer to the input cursor. Not NULL.
+ * @param[out]    myint_ptr Receiver for the parsed value. Not NULL.
+ * @retval 0  No digits found, or overflow.
+ * @retval 1  Parsed successfully.
+ * @return 1 on success.
+ */
 int
 safe_parse_maxint (char **str_ptr, long *myint_ptr)
 {

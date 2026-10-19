@@ -1,12 +1,21 @@
-/*
- *   mini-libc functions
- *
+/*!
+ * @file substr.c
+ * @brief Mini-libc: substring test.
  */
 
 #include <shared.h>
 #include "libc.h"
 #include "fsys.h"
 
+/*!
+ * @brief Test whether @a s1 is a prefix of @a s2.
+ * @param[in] s1 Candidate prefix. Not NULL.
+ * @param[in] s2 String to compare against. Not NULL.
+ * @retval  0  Strings are identical.
+ * @retval -1  @a s1 is a proper prefix of @a s2.
+ * @retval  1  @a s1 is not a prefix of @a s2.
+ * @return Comparison result.
+ */
 int
 substring (const char *s1, const char *s2)
 {

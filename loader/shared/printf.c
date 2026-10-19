@@ -1,12 +1,23 @@
-/*
- *   mini-libc functions
- *
+/*!
+ * @file printf.c
+ * @brief Mini-libc: formatted console output.
  */
 
 #include <shared.h>
 #include "libc.h"
 #include "fsys.h"
 
+/*!
+ * @brief Format and print to the console.
+ *
+ * Supports the format specifiers `%u` in all builds, plus `%d`, `%x`,
+ * `%X`, `%c` and `%s` on non-STAGE1_5 builds. The variadic arguments
+ * are read from the stack via a raw pointer, which is the convention
+ * used by the original GRUB mini-libc.
+ *
+ * @param[in] format NUL-terminated format string. Not NULL.
+ * @param[in] ...    Format arguments.
+ */
 void
 grub_printf (const char *format,...)
 {

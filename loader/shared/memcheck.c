@@ -1,12 +1,23 @@
-/*
- *   mini-libc functions
- *
+/*!
+ * @file memcheck.c
+ * @brief Mini-libc: address-range sanity check (stub).
  */
 
 #include <shared.h>
 #include "libc.h"
 #include "fsys.h"
 
+/*!
+ * @brief Stub range check for a memory region.
+ *
+ * The real bounds-checking logic is currently disabled; the function
+ * always succeeds.
+ *
+ * @param[in] addr Base address to check.
+ * @param[in] len  Region length in bytes.
+ * @retval 1  Always (checking is currently disabled).
+ * @return 1.
+ */
 long
 grub_memcheck (unsigned long addr, long len)
 {

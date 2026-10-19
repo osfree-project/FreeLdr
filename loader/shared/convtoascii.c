@@ -1,12 +1,24 @@
-/*
- *   mini-libc functions
- *
+/*!
+ * @file convtoascii.c
+ * @brief Mini-libc: integer-to-ASCII conversion.
  */
 
 #include <shared.h>
 #include "libc.h"
 #include "fsys.h"
 
+/*!
+ * @brief Convert an integer to ASCII into @a buf.
+ *
+ * The format specifier @a c selects the base: 'x' or 'X' = 16,
+ * otherwise 10. On non-STAGE1_5 builds a negative @a num with 'd' is
+ * written with a leading '-'.
+ *
+ * @param[out] buf Destination buffer. Not NULL.
+ * @param[in]  c   Format specifier.
+ * @param[in]  ... The integer value to convert (passed as a 32-bit word).
+ * @return Pointer to the byte just past the last emitted digit.
+ */
 char *
 convert_to_ascii (char *buf, int c,...)
 {
